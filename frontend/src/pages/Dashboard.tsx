@@ -1,63 +1,68 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Car, Calculator, Trash2, Edit } from 'lucide-react';
+import { Plus, ShoppingBag, Calculator, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency } from '@/utils/format';
-import { useVehicles, useCreateVehicle, useUpdateVehicle, useDeleteVehicle } from '@/hooks/useApi';
-import { VehicleForm, type VehicleFormData } from '@/components/forms/VehicleForm';
-import type { Vehicle, VehicleCreate } from '@/types/api';
+import { usePurchases, useCreatePurchase, useUpdatePurchase, useDeletePurchase } from '@/hooks/useApi';
+import { PurchaseForm, type PurchaseFormData } from '@/components/forms/PurchaseForm';
+import { getCategory } from '@/utils/categories';
+import type { Purchase, PurchaseCreate } from '@/types/api';
 
-function toPayload(data: VehicleFormData): VehicleCreate {
+function toPayload(data: PurchaseFormData): PurchaseCreate {
+  // Los detalles de vehículo solo se guardan para esa categoría
+  const isVehicle = data.category === 'vehicle';
   return {
     name: data.name,
     price_cash: data.price_cash,
-    brand: data.brand || null,
-    model: data.model || null,
-    year: data.year ? parseInt(data.year, 10) : null,
-    is_used: data.is_used,
+    category: data.category,
+    brand: (isVehicle && data.brand) || null,
+    model: (isVehicle && data.model) || null,
+    year: isVehicle && data.year ? parseInt(data.year, 10) : null,
+    is_used: isVehicle && data.is_used,
     notes: data.notes || null,
   };
 }
 
-function toFormData(vehicle: Vehicle): VehicleFormData {
+function toFormData(purchase: Purchase): PurchaseFormData {
   return {
-    name: vehicle.name,
-    price_cash: vehicle.price_cash,
-    brand: vehicle.brand ?? '',
-    model: vehicle.model ?? '',
-    year: vehicle.year?.toString() ?? '',
-    is_used: vehicle.is_used,
-    notes: vehicle.notes ?? '',
+    name: purchase.name,
+    price_cash: purchase.price_cash,
+    category: purchase.category,
+    brand: purchase.brand ?? '',
+    model: purchase.model ?? '',
+    year: purchase.year?.toString() ?? '',
+    is_used: purchase.is_used,
+    notes: purchase.notes ?? '',
   };
 }
 
 export function Dashboard() {
-  const { data: vehicles = [], isLoading, isError } = useVehicles();
-  const createVehicleMutation = useCreateVehicle();
-  const updateVehicleMutation = useUpdateVehicle();
-  const deleteVehicleMutation = useDeleteVehicle();
+  const { data: purchases = [], isLoading, isError } = usePurchases();
+  const createPurchaseMutation = useCreatePurchase();
+  const updatePurchaseMutation = useUpdatePurchase();
+  const deletePurchaseMutation = useDeletePurchase();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
   const closeModal = () => {
     setShowCreateModal(false);
-    setEditingVehicle(null);
+    setEditingPurchase(null);
   };
 
-  const handleSubmit = async (data: VehicleFormData) => {
-    if (editingVehicle) {
-      await updateVehicleMutation.mutateAsync({ id: editingVehicle.id, data: toPayload(data) });
+  const handleSubmit = async (data: PurchaseFormData) => {
+    if (editingPurchase) {
+      await updatePurchaseMutation.mutateAsync({ id: editingPurchase.id, data: toPayload(data) });
     } else {
-      await createVehicleMutation.mutateAsync(toPayload(data));
+      await createPurchaseMutation.mutateAsync(toPayload(data));
     }
     closeModal();
   };
 
-  const handleDeleteVehicle = async (id: string) => {
-    if (confirm('¿Seguro que quieres borrar este vehículo con todas sus ofertas y comparativas?')) {
-      await deleteVehicleMutation.mutateAsync(id);
+  const handleDeletePurchase = async (id: string) => {
+    if (confirm('¿Seguro que quieres borrar esta compra con todas sus ofertas y comparativas?')) {
+      await deletePurchaseMutation.mutateAsync(id);
     }
   };
 
@@ -65,12 +70,12 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mis vehículos</h1>
-          <p className="text-gray-600">Apunta los coches que estás mirando y compara las ofertas de financiación</p>
+          <h1 className="text-2xl font-bold text-gray-900">Mis compras</h1>
+          <p className="text-gray-600">Apunta lo que quieres comprar y compara las ofertas de financiación que te den</p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Añadir vehículo
+          Añadir compra
         </Button>
       </div>
 
@@ -85,44 +90,44 @@ export function Dashboard() {
       ) : isError ? (
         <Card>
           <CardContent className="py-12 text-center text-danger-600">
-            No se han podido cargar los vehículos. Inténtalo de nuevo en unos segundos.
+            No se han podido cargar tus compras. Inténtalo de nuevo en unos segundos.
           </CardContent>
         </Card>
-      ) : vehicles.length === 0 ? (
+      ) : purchases.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Car className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Todavía no hay vehículos</h3>
-            <p className="text-gray-600 mb-4">Añade un vehículo para empezar a comparar ofertas de financiación</p>
+            <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Todavía no hay compras</h3>
+            <p className="text-gray-600 mb-4">Añade lo que quieres comprar (un coche, un electrodoméstico, una reforma...) para comparar ofertas de financiación</p>
             <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Añadir mi primer vehículo
+              Añadir mi primera compra
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {vehicles.map(vehicle => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              onEdit={setEditingVehicle}
-              onDelete={handleDeleteVehicle}
+          {purchases.map(purchase => (
+            <PurchaseCard
+              key={purchase.id}
+              purchase={purchase}
+              onEdit={setEditingPurchase}
+              onDelete={handleDeletePurchase}
             />
           ))}
         </div>
       )}
 
       {/* Create/Edit Modal */}
-      {(showCreateModal || editingVehicle) && (
+      {(showCreateModal || editingPurchase) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <VehicleForm
-              initialData={editingVehicle ? toFormData(editingVehicle) : undefined}
+            <PurchaseForm
+              initialData={editingPurchase ? toFormData(editingPurchase) : undefined}
               onSubmit={handleSubmit}
               onCancel={closeModal}
-              isLoading={createVehicleMutation.isPending || updateVehicleMutation.isPending}
-              submitLabel={editingVehicle ? 'Guardar cambios' : 'Crear vehículo'}
+              isLoading={createPurchaseMutation.isPending || updatePurchaseMutation.isPending}
+              submitLabel={editingPurchase ? 'Guardar cambios' : 'Crear compra'}
             />
           </div>
         </div>
@@ -131,36 +136,42 @@ export function Dashboard() {
   );
 }
 
-function VehicleCard({ vehicle, onEdit, onDelete }: {
-  vehicle: Vehicle;
-  onEdit: (vehicle: Vehicle) => void;
+function PurchaseCard({ purchase, onEdit, onDelete }: {
+  purchase: Purchase;
+  onEdit: (purchase: Purchase) => void;
   onDelete: (id: string) => void;
 }) {
+  const category = getCategory(purchase.category);
+  const details = [purchase.brand, purchase.model, purchase.year ? `(${purchase.year})` : null].filter(Boolean).join(' ');
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
-        <div>
-          <h3 className="font-semibold text-gray-900">{vehicle.name}</h3>
-          <p className="text-sm text-gray-500">{vehicle.brand} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ''}</p>
+        <div className="flex items-start gap-3">
+          <category.icon className="h-5 w-5 mt-0.5 text-gray-400 shrink-0" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-gray-900">{purchase.name}</h3>
+            <p className="text-sm text-gray-500">{details || category.label}</p>
+          </div>
         </div>
-        <Badge variant={vehicle.is_used ? 'info' : 'success'}>{vehicle.is_used ? 'Ocasión' : 'Nuevo'}</Badge>
+        {purchase.is_used && <Badge variant="info">Ocasión</Badge>}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-center py-4 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-500">Precio al contado</p>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(vehicle.price_cash)}</p>
+          <p className="text-2xl font-bold text-gray-900">{formatCurrency(purchase.price_cash)}</p>
         </div>
         <div className="flex gap-2">
-          <Link to={`/vehicles/${vehicle.id}`} className="flex-1">
+          <Link to={`/purchases/${purchase.id}`} className="flex-1">
             <Button variant="primary" size="sm" className="w-full">
               <Calculator className="h-4 w-4 mr-1" />
               Ver ofertas
             </Button>
           </Link>
-          <Button variant="outline" size="sm" onClick={() => onEdit(vehicle)} aria-label={`Editar ${vehicle.name}`}>
+          <Button variant="outline" size="sm" onClick={() => onEdit(purchase)} aria-label={`Editar ${purchase.name}`}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="danger" size="sm" onClick={() => onDelete(vehicle.id)} aria-label={`Borrar ${vehicle.name}`}>
+          <Button variant="danger" size="sm" onClick={() => onDelete(purchase.id)} aria-label={`Borrar ${purchase.name}`}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

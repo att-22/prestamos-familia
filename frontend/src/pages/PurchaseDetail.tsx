@@ -6,18 +6,19 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency, formatPercent } from '@/utils/format';
 import {
-  useVehicle,
-  useLeasingOffers,
-  useCreateLeasingOffer,
-  useUpdateLeasingOffer,
-  useDeleteLeasingOffer,
+  usePurchase,
+  useFinancingOffers,
+  useCreateFinancingOffer,
+  useUpdateFinancingOffer,
+  useDeleteFinancingOffer,
 } from '@/hooks/useApi';
-import { LeasingOfferForm, type LeasingOfferFormData } from '@/components/forms/LeasingOfferForm';
-import type { LeasingOffer, LeasingOfferCreate } from '@/types/api';
+import { FinancingOfferForm, type FinancingOfferFormData } from '@/components/forms/FinancingOfferForm';
+import { getCategory } from '@/utils/categories';
+import type { FinancingOffer, FinancingOfferCreate } from '@/types/api';
 
-function toPayload(vehicleId: string, data: LeasingOfferFormData): LeasingOfferCreate {
+function toPayload(purchaseId: string, data: FinancingOfferFormData): FinancingOfferCreate {
   return {
-    vehicle_id: vehicleId,
+    purchase_id: purchaseId,
     source_name: data.source_name,
     down_payment: data.down_payment,
     tin: data.tin,
@@ -34,7 +35,7 @@ function toPayload(vehicleId: string, data: LeasingOfferFormData): LeasingOfferC
   };
 }
 
-function toFormData(offer: LeasingOffer): LeasingOfferFormData {
+function toFormData(offer: FinancingOffer): FinancingOfferFormData {
   return {
     source_name: offer.source_name,
     down_payment: offer.down_payment,
@@ -52,25 +53,25 @@ function toFormData(offer: LeasingOffer): LeasingOfferFormData {
   };
 }
 
-export function VehicleDetail() {
-  const { vehicleId } = useParams();
+export function PurchaseDetail() {
+  const { purchaseId } = useParams();
   const navigate = useNavigate();
-  const { data: vehicle, isLoading: vehicleLoading } = useVehicle(vehicleId!);
-  const { data: offers = [], isLoading: offersLoading } = useLeasingOffers(vehicleId);
-  const createOfferMutation = useCreateLeasingOffer();
-  const updateOfferMutation = useUpdateLeasingOffer();
-  const deleteOfferMutation = useDeleteLeasingOffer();
+  const { data: purchase, isLoading: purchaseLoading } = usePurchase(purchaseId!);
+  const { data: offers = [], isLoading: offersLoading } = useFinancingOffers(purchaseId);
+  const createOfferMutation = useCreateFinancingOffer();
+  const updateOfferMutation = useUpdateFinancingOffer();
+  const deleteOfferMutation = useDeleteFinancingOffer();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingOffer, setEditingOffer] = useState<LeasingOffer | null>(null);
+  const [editingOffer, setEditingOffer] = useState<FinancingOffer | null>(null);
 
-  if (vehicleLoading) return <LoadingSkeleton />;
+  if (purchaseLoading) return <LoadingSkeleton />;
 
-  if (!vehicle) {
+  if (!purchase) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <h1 className="text-lg font-medium text-gray-900 mb-4">Vehículo no encontrado</h1>
-          <Button onClick={() => navigate('/dashboard')}>Volver a mis vehículos</Button>
+          <h1 className="text-lg font-medium text-gray-900 mb-4">Compra no encontrada</h1>
+          <Button onClick={() => navigate('/dashboard')}>Volver a mis compras</Button>
         </CardContent>
       </Card>
     );
@@ -81,8 +82,8 @@ export function VehicleDetail() {
     setEditingOffer(null);
   };
 
-  const handleSubmit = async (data: LeasingOfferFormData) => {
-    const payload = toPayload(vehicle.id, data);
+  const handleSubmit = async (data: FinancingOfferFormData) => {
+    const payload = toPayload(purchase.id, data);
     if (editingOffer) {
       await updateOfferMutation.mutateAsync({ id: editingOffer.id, data: payload });
     } else {
@@ -105,8 +106,10 @@ export function VehicleDetail() {
           Volver
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{vehicle.name}</h1>
-          <p className="text-gray-600">{vehicle.brand} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ''}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{purchase.name}</h1>
+          <p className="text-gray-600">
+            {[purchase.brand, purchase.model, purchase.year ? `(${purchase.year})` : null].filter(Boolean).join(' ') || getCategory(purchase.category).label}
+          </p>
         </div>
       </div>
 
@@ -114,7 +117,7 @@ export function VehicleDetail() {
         <CardContent className="py-4">
           <div className="text-center">
             <p className="text-sm text-gray-500">Precio al contado</p>
-            <p className="text-3xl font-bold text-gray-900">{formatCurrency(vehicle.price_cash)}</p>
+            <p className="text-3xl font-bold text-gray-900">{formatCurrency(purchase.price_cash)}</p>
           </div>
         </CardContent>
       </Card>
@@ -136,7 +139,7 @@ export function VehicleDetail() {
           <CardContent className="py-12 text-center">
             <Calculator className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Todavía no hay ofertas</h3>
-            <p className="text-gray-600 mb-4">Añade las ofertas que te den el concesionario o el banco para compararlas</p>
+            <p className="text-gray-600 mb-4">Añade las ofertas que te den la tienda, el concesionario o el banco para compararlas</p>
             <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Añadir la primera oferta
@@ -149,7 +152,7 @@ export function VehicleDetail() {
             <OfferCard
               key={offer.id}
               offer={offer}
-              vehiclePrice={vehicle.price_cash}
+              cashPrice={purchase.price_cash}
               onEdit={setEditingOffer}
               onDelete={handleDeleteOffer}
             />
@@ -160,7 +163,7 @@ export function VehicleDetail() {
       {(showCreateModal || editingOffer) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <LeasingOfferForm
+            <FinancingOfferForm
               initialData={editingOffer ? toFormData(editingOffer) : undefined}
               onSubmit={handleSubmit}
               onCancel={closeModal}
@@ -174,14 +177,14 @@ export function VehicleDetail() {
   );
 }
 
-function OfferCard({ offer, vehiclePrice, onEdit, onDelete }: {
-  offer: LeasingOffer;
-  vehiclePrice: string;
-  onEdit: (offer: LeasingOffer) => void;
+function OfferCard({ offer, cashPrice, onEdit, onDelete }: {
+  offer: FinancingOffer;
+  cashPrice: string;
+  onEdit: (offer: FinancingOffer) => void;
   onDelete: (id: string) => void;
 }) {
   // Misma fórmula que el backend (services/calculations.py), para la vista rápida
-  const price = parseFloat(vehiclePrice);
+  const price = parseFloat(cashPrice);
   const downPayment = parseFloat(offer.down_payment);
   const totalPayments = parseFloat(offer.monthly_payment) * offer.months;
   const insurance = parseFloat(offer.mandatory_insurance_year) * offer.months / 12;
@@ -237,7 +240,7 @@ function OfferCard({ offer, vehiclePrice, onEdit, onDelete }: {
           </div>
         </div>
         <div className="flex gap-2 pt-3 border-t border-gray-200">
-          <Link to={`/compare/${offer.vehicle_id}/${offer.id}`} className="flex-1 sm:flex-none">
+          <Link to={`/compare/${offer.purchase_id}/${offer.id}`} className="flex-1 sm:flex-none">
             <Button variant="primary" size="sm" className="w-full">
               <Calculator className="h-4 w-4 mr-1" />
               Analizar oferta

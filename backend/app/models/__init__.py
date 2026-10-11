@@ -1,6 +1,6 @@
 from app.models.user import User
-from app.models.vehicle import Vehicle
-from app.models.leasing_offer import LeasingOffer
+from app.models.purchase import Purchase
+from app.models.financing_offer import FinancingOffer
 from app.models.comparison import Comparison
 
-__all__ = ["User", "Vehicle", "LeasingOffer", "Comparison"]
+__all__ = ["User", "Purchase", "FinancingOffer", "Comparison"]

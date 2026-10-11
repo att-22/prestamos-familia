@@ -4,7 +4,7 @@
  */
 import { z } from 'zod';
 
-export const vehicleSchema = z.object({
+export const purchaseSchema = z.object({
   name: z.string().min(1).max(200),
   price_cash: z.string().regex(/^\d+(\.\d{1,2})?$/).refine(v => parseFloat(v) > 0),
   brand: z.string().max(100).optional(),
@@ -14,8 +14,8 @@ export const vehicleSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const leasingOfferSchema = z.object({
-  vehicle_id: z.string().uuid(),
+export const financingOfferSchema = z.object({
+  purchase_id: z.string().uuid(),
   source_name: z.string().min(1).max(200),
   down_payment: z.string().regex(/^\d+(\.\d{1,2})?$/).refine(v => parseFloat(v) >= 0),
   tin: z.string().regex(/^\d+(\.\d{1,2})?$/).refine(v => { const n = parseFloat(v); return n >= 0 && n <= 100; }),
@@ -32,12 +32,12 @@ export const leasingOfferSchema = z.object({
 });
 
 export const comparisonSchema = z.object({
-  vehicle_id: z.string().uuid(),
-  leasing_offer_id: z.string().uuid(),
+  purchase_id: z.string().uuid(),
+  financing_offer_id: z.string().uuid(),
   user_monthly_income: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
   user_available_savings: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
 });
 
-export type VehicleFormData = z.infer<typeof vehicleSchema>;
-export type LeasingOfferFormData = z.infer<typeof leasingOfferSchema>;
+export type PurchaseFormData = z.infer<typeof purchaseSchema>;
+export type FinancingOfferFormData = z.infer<typeof financingOfferSchema>;
 export type ComparisonFormData = z.infer<typeof comparisonSchema>;

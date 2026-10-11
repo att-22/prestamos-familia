@@ -29,7 +29,7 @@ def test_good_offer():
     assert "NO_OPENING_FEE" in alerts
     assert "NO_EARLY_REPAYMENT_FEE" in alerts
     assert "TAE_TIN_GAP" not in alerts
-    assert alerts["LEASING_MORE_EXPENSIVE"].type == AlertType.WARNING
+    assert alerts["FINANCING_MORE_EXPENSIVE"].type == AlertType.WARNING
 
 
 def test_expensive_offer():
@@ -74,7 +74,7 @@ def test_no_user_context_means_no_personal_alerts():
 def test_financing_cheaper_than_cash_is_not_reported_as_cash_saving():
     alerts = alerts_for(savings_vs_cash=Decimal("500"))
 
-    assert "LEASING_MORE_EXPENSIVE" not in alerts
+    assert "FINANCING_MORE_EXPENSIVE" not in alerts
     assert "Financiar" in alerts["SAVINGS_POSITIVE"].message
 
 

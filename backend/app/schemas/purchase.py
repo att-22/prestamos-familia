@@ -2,12 +2,22 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 from typing import Optional
 
 
-class VehicleBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200, description="Nombre descriptivo: ej. 'Toyota Corolla 2024'")
+class PurchaseCategory(str, Enum):
+    VEHICLE = "vehicle"
+    HOME = "home"
+    RENOVATION = "renovation"
+    ELECTRONICS = "electronics"
+    OTHER = "other"
+
+
+class PurchaseBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200, description="Nombre descriptivo: ej. 'Lavadora Bosch' o 'Toyota Corolla 2024'")
     price_cash: Decimal = Field(..., gt=0, description="Precio al contado")
+    category: PurchaseCategory = PurchaseCategory.OTHER
     brand: Optional[str] = Field(None, max_length=100)
     model: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1990, le=2030)
@@ -15,13 +25,14 @@ class VehicleBase(BaseModel):
     notes: Optional[str] = None
 
 
-class VehicleCreate(VehicleBase):
+class PurchaseCreate(PurchaseBase):
     pass
 
 
-class VehicleUpdate(BaseModel):
+class PurchaseUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     price_cash: Optional[Decimal] = Field(None, gt=0)
+    category: Optional[PurchaseCategory] = None
     brand: Optional[str] = Field(None, max_length=100)
     model: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1990, le=2030)
@@ -29,7 +40,7 @@ class VehicleUpdate(BaseModel):
     notes: Optional[str] = None
 
 
-class VehicleRead(VehicleBase):
+class PurchaseRead(PurchaseBase):
     id: UUID
     user_id: UUID
     created_at: datetime

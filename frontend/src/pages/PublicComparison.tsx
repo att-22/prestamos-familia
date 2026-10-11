@@ -32,13 +32,13 @@ export function PublicComparison() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">{comparison.vehicle_name}</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{comparison.purchase_name}</h1>
         <p className="text-gray-600 mt-1">Comparativa compartida • {formatDate(comparison.created_at)}</p>
       </div>
 
       <ComparisonSummary
         priceCash={comparison.price_cash}
-        totalLeasingCost={comparison.total_leasing_cost}
+        totalFinancingCost={comparison.total_financing_cost}
         totalInterestFees={comparison.total_interest_fees}
         savingsVsCash={comparison.savings_vs_cash}
       />
@@ -89,7 +89,7 @@ export function PublicComparison() {
           <h3 className="text-lg font-semibold text-gray-900">Compartir esta comparativa</h3>
         </CardHeader>
         <CardContent>
-          <ShareButton slug={slug!} vehicleName={comparison.vehicle_name} />
+          <ShareButton slug={slug!} purchaseName={comparison.purchase_name} />
         </CardContent>
       </Card>
 

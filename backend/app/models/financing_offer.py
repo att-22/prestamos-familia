@@ -8,18 +8,18 @@ import sqlalchemy.dialects.postgresql as pg
 
 if TYPE_CHECKING:
     from app.models.comparison import Comparison
-    from app.models.vehicle import Vehicle
+    from app.models.purchase import Purchase
 
 
-class LeasingOffer(SQLModel, table=True):
-    __tablename__ = "leasing_offers"
+class FinancingOffer(SQLModel, table=True):
+    __tablename__ = "financing_offers"
 
     id: uuid.UUID = Field(
         default_factory=uuid.uuid4,
         sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, nullable=False),
     )
-    vehicle_id: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False, index=True),
+    purchase_id: uuid.UUID = Field(
+        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("purchases.id", ondelete="CASCADE"), nullable=False, index=True),
     )
 
     source_name: str = Field(sa_column=Column(pg.VARCHAR(200), nullable=False), description="Nombre del concesionario/banco")
@@ -47,8 +47,8 @@ class LeasingOffer(SQLModel, table=True):
         sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),
     )
 
-    vehicle: "Vehicle" = Relationship(back_populates="leasing_offers")
+    purchase: "Purchase" = Relationship(back_populates="financing_offers")
     comparisons: list["Comparison"] = Relationship(
-        back_populates="leasing_offer",
+        back_populates="financing_offer",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )

@@ -20,8 +20,8 @@ class Alert(BaseModel):
 
 
 class ComparisonBase(BaseModel):
-    vehicle_id: UUID
-    leasing_offer_id: UUID
+    purchase_id: UUID
+    financing_offer_id: UUID
     user_monthly_income: Optional[Decimal] = Field(None, ge=0)
     user_available_savings: Optional[Decimal] = Field(None, ge=0)
 
@@ -49,7 +49,7 @@ class ComparisonResult(BaseModel):
     total_payments: Decimal
     total_insurance: Decimal
     total_fees: Decimal
-    total_leasing_cost: Decimal
+    total_financing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
     effective_annual_rate: Decimal
@@ -65,11 +65,11 @@ class ComparisonResult(BaseModel):
 class ComparisonRead(BaseModel):
     id: UUID
     user_id: UUID
-    vehicle_id: UUID
-    leasing_offer_id: UUID
-    vehicle_name: Optional[str] = None
+    purchase_id: UUID
+    financing_offer_id: UUID
+    purchase_name: Optional[str] = None
     source_name: Optional[str] = None
-    total_leasing_cost: Decimal
+    total_financing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
     monthly_income_percent: Optional[Decimal]
@@ -87,7 +87,7 @@ class ComparisonRead(BaseModel):
 
 class ComparisonPublic(BaseModel):
     """Vista pública para link compartido /c/{slug}"""
-    vehicle_name: str
+    purchase_name: str
     price_cash: Decimal
     source_name: str
     down_payment: Decimal
@@ -96,7 +96,7 @@ class ComparisonPublic(BaseModel):
     months: int
     monthly_payment: Decimal
     residual_value: Optional[Decimal] = None
-    total_leasing_cost: Decimal
+    total_financing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
     alerts: List[Alert]

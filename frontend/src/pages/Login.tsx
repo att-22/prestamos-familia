@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Car } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -48,7 +48,7 @@ export function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center pb-2">
           <div className="flex items-center justify-center gap-2 text-2xl font-bold text-primary-600 mb-4">
-            <Car className="h-8 w-8" />
+            <Wallet className="h-8 w-8" />
             <span>Préstamos Familia</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Iniciar sesión</h1>

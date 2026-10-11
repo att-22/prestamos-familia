@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/Button';
 
 interface ShareButtonProps {
   slug: string;
-  vehicleName: string;
+  purchaseName: string;
 }
 
-export function ShareButton({ slug, vehicleName }: ShareButtonProps) {
+export function ShareButton({ slug, purchaseName }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const url = `${window.location.origin}/c/${slug}`;
   const canShare = typeof navigator.share === 'function';
@@ -24,7 +24,7 @@ export function ShareButton({ slug, vehicleName }: ShareButtonProps) {
 
   const handleShare = async () => {
     try {
-      await navigator.share({ title: `Comparativa: ${vehicleName}`, url });
+      await navigator.share({ title: `Comparativa: ${purchaseName}`, url });
     } catch {
       // El usuario canceló el diálogo de compartir
     }

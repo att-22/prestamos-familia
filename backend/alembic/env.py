@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.config import get_settings
-from app.models import User, Vehicle, LeasingOffer, Comparison
+from app.models import User, Purchase, FinancingOffer, Comparison
 from sqlmodel import SQLModel
 
 config = context.config

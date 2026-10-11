@@ -8,11 +8,11 @@ import sqlalchemy.dialects.postgresql as pg
 
 if TYPE_CHECKING:
     from app.models.comparison import Comparison
-    from app.models.leasing_offer import LeasingOffer
+    from app.models.financing_offer import FinancingOffer
 
 
-class Vehicle(SQLModel, table=True):
-    __tablename__ = "vehicles"
+class Purchase(SQLModel, table=True):
+    __tablename__ = "purchases"
 
     id: uuid.UUID = Field(
         default_factory=uuid.uuid4,
@@ -24,8 +24,10 @@ class Vehicle(SQLModel, table=True):
     name: str = Field(sa_column=Column(pg.VARCHAR(200), nullable=False))
     price_cash: Decimal = Field(
         sa_column=Column(pg.NUMERIC(12, 2), nullable=False),
-        description="Precio al contado del vehículo",
+        description="Precio al contado",
     )
+    category: str = Field(default="other", sa_column=Column(pg.VARCHAR(20), nullable=False, default="other"))
+    # Detalles opcionales, pensados para la categoría "vehicle"
     brand: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
     model: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
     year: Optional[int] = Field(default=None, sa_column=Column(pg.INTEGER, nullable=True))
@@ -41,11 +43,11 @@ class Vehicle(SQLModel, table=True):
     )
 
     # Relationships
-    leasing_offers: list["LeasingOffer"] = Relationship(
-        back_populates="vehicle",
+    financing_offers: list["FinancingOffer"] = Relationship(
+        back_populates="purchase",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
     comparisons: list["Comparison"] = Relationship(
-        back_populates="vehicle",
+        back_populates="purchase",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )

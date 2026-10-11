@@ -38,7 +38,7 @@ class CalculationResult:
     total_payments: Decimal
     total_insurance: Decimal
     total_fees: Decimal
-    total_leasing_cost: Decimal
+    total_financing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
     effective_annual_rate: Decimal
@@ -66,20 +66,20 @@ def resolve_residual_value(
     return Decimal("0.00")
 
 
-def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: Optional[Decimal] = None, user_available_savings: Optional[Decimal] = None) -> CalculationResult:
+def calculate_financing_comparison(input: CalculationInput, user_monthly_income: Optional[Decimal] = None, user_available_savings: Optional[Decimal] = None) -> CalculationResult:
     """
-    Calcula la comparación completa entre pago al contado y leasing/préstamo.
+    Calcula la comparación completa entre pagar al contado y financiar.
     
     Fórmulas:
     - Importe financiado = Precio contado - Entrada
     - Total cuotas = Cuota mensual × Meses
     - Total seguros = Seguro anual × (Meses / 12)
     - Total comisiones = Comisión apertura + (Comisión apertura % × Importe financiado)
-    - Coste total leasing = Entrada + Total cuotas + Cuota final + Total seguros + Total comisiones
-      (la cuota final / valor residual es lo que hay que pagar para quedarse el coche,
+    - Coste total financiado = Entrada + Total cuotas + Cuota final + Total seguros + Total comisiones
+      (la cuota final / valor residual es lo que hay que pagar para quedarse lo comprado,
       que es con lo que se compara el pago al contado)
-    - Intereses + comisiones = Coste total leasing - Precio contado
-    - Ahorro contado = Precio contado - Coste total leasing (negativo = leasing más caro)
+    - Intereses + comisiones = Coste total financiado - Precio contado
+    - Ahorro contado = Precio contado - Coste total financiado (negativo = financiar es más caro)
     - TAE efectiva = Calculada vía VAN (aproximación)
     """
     
@@ -96,17 +96,17 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
     opening_fee_calculated = round_eur(input.opening_fee + (financed_amount * input.opening_fee_percent / Decimal("100")))
     total_fees = round_eur(opening_fee_calculated)
     
-    # Cuota final para quedarse el coche (0 si la oferta no tiene)
+    # Cuota final para quedarse lo comprado (0 si la oferta no tiene)
     residual_value = resolve_residual_value(input.price_cash, input.residual_value, input.residual_value_percent)
     
-    # Coste total del leasing
-    total_leasing_cost = round_eur(input.down_payment + total_payments + residual_value + total_insurance + total_fees)
+    # Coste total financiando
+    total_financing_cost = round_eur(input.down_payment + total_payments + residual_value + total_insurance + total_fees)
     
     # Intereses + comisiones totales (lo que pagas de más vs contado)
-    total_interest_fees = round_eur(total_leasing_cost - input.price_cash)
+    total_interest_fees = round_eur(total_financing_cost - input.price_cash)
     
-    # Diferencia contado - leasing (negativo = el leasing sale más caro)
-    savings_vs_cash = round_eur(input.price_cash - total_leasing_cost)
+    # Diferencia contado - financiado (negativo = financiar sale más caro)
+    savings_vs_cash = round_eur(input.price_cash - total_financing_cost)
     
     # TAE efectiva calculada (aproximación via VAN simplificada)
     # Resolvemos: financed_amount = SUM(monthly_payment / (1+r)^n) 
@@ -148,7 +148,7 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
         total_payments=total_payments,
         total_insurance=total_insurance,
         total_fees=total_fees,
-        total_leasing_cost=total_leasing_cost,
+        total_financing_cost=total_financing_cost,
         total_interest_fees=total_interest_fees,
         savings_vs_cash=savings_vs_cash,
         effective_annual_rate=effective_annual_rate,

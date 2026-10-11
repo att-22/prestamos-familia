@@ -14,7 +14,7 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
     <div className="space-y-6">
       <ComparisonSummary
         priceCash={result.price_cash}
-        totalLeasingCost={result.total_leasing_cost}
+        totalFinancingCost={result.total_financing_cost}
         totalInterestFees={result.total_interest_fees}
         savingsVsCash={result.savings_vs_cash}
       />
@@ -37,7 +37,7 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
               </div>
               {result.residual_value !== null && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Cuota final para quedarte el coche</span>
+                  <span className="text-gray-600">Cuota final para que sea tuyo</span>
                   <span className="font-medium">{formatCurrency(result.residual_value)}</span>
                 </div>
               )}
@@ -55,7 +55,7 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
               )}
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">TOTAL FINANCIADO</span>
-                <span className="font-bold text-lg text-gray-900">{formatCurrency(result.total_leasing_cost)}</span>
+                <span className="font-bold text-lg text-gray-900">{formatCurrency(result.total_financing_cost)}</span>
               </div>
             </div>
           </CardContent>
@@ -72,7 +72,7 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Detail
                 label="Importe financiado"
-                help="Precio del coche menos la entrada. Es el capital sobre el que se calculan intereses."
+                help="Precio al contado menos la entrada. Es el capital sobre el que se calculan intereses."
                 value={formatCurrency(result.financed_amount)}
               />
               <Detail
@@ -131,12 +131,12 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
 
 interface ComparisonSummaryProps {
   priceCash: string;
-  totalLeasingCost: string;
+  totalFinancingCost: string;
   totalInterestFees: string;
   savingsVsCash: string;
 }
 
-export function ComparisonSummary({ priceCash, totalLeasingCost, totalInterestFees, savingsVsCash }: ComparisonSummaryProps) {
+export function ComparisonSummary({ priceCash, totalFinancingCost, totalInterestFees, savingsVsCash }: ComparisonSummaryProps) {
   // savings_vs_cash = contado - financiado: negativo cuando financiar sale más caro
   const extraCost = -parseFloat(savingsVsCash);
   const financingCostsMore = extraCost > 0;
@@ -151,7 +151,7 @@ export function ComparisonSummary({ priceCash, totalLeasingCost, totalInterestFe
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-500">Total financiando</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalLeasingCost)}</p>
+            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalFinancingCost)}</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-500">Intereses, comisiones y seguros</p>

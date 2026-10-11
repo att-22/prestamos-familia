@@ -3,9 +3,10 @@
 [![Backend CI](https://github.com/att-22/prestamos-familia/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/att-22/prestamos-familia/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/att-22/prestamos-familia/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/att-22/prestamos-familia/actions/workflows/frontend-ci.yml)
 
-A web app that shows what financing a car really costs compared with paying cash.
+A web app that shows what financing a purchase really costs compared with paying cash.
 
-Car dealers sell a monthly payment. This app turns an offer into the numbers
+Retailers and lenders sell a monthly payment. Whether it is a car, an appliance
+or a renovation, this app turns a financing offer into the numbers
 that matter — total paid, real APR, and how much more it costs than cash — and
 explains them in plain language for people with no financial background. The UI
 is in Spanish because that is who it was built for.
@@ -14,8 +15,9 @@ is in Spanish because that is who it was built for.
 
 ## What it does
 
-- **Track vehicles and offers.** Save the cars you are considering and every
-  financing offer you get for each one.
+- **Track purchases and offers.** Save what you are thinking of buying — a
+  vehicle, something for the home, a renovation, electronics — and every
+  financing offer you get for it.
 - **Cash vs. financing.** Total cost of the offer (down payment, instalments,
   balloon payment, mandatory insurance and fees) against the cash price.
 - **Effective APR.** Recomputes the APR (TAE) from the actual cash flows, so it
@@ -41,7 +43,7 @@ is in Spanish because that is who it was built for.
 | Effective APR | Monthly rate `r` that solves `financed − fees = Σ instalment/(1+r)ⁿ + balloon/(1+r)ᴺ`, annualised as `(1+r)¹² − 1` |
 
 The balloon payment (residual value) is counted as a cost because the comparison
-is about *owning* the car: it is what must be paid at the end to keep it. All
+is about *owning* what you bought: it is what must be paid at the end to keep it. All
 money is handled as `Decimal` end to end, never as floats.
 
 The logic lives in [`backend/app/services`](backend/app/services) and is covered
@@ -61,7 +63,7 @@ by unit tests.
 ```
 backend/
   app/
-    api/routes/     HTTP endpoints (auth, vehicles, leasing offers, comparisons)
+    api/routes/     HTTP endpoints (auth, purchases, financing offers, comparisons)
     core/           settings, database session, JWT helpers
     models/         SQLModel tables
     schemas/        request/response models
@@ -165,7 +167,7 @@ when `ENVIRONMENT=production`.
 Planned next:
 
 - Production sign-in with email magic links
-- Side-by-side comparison of several offers for the same vehicle
+- Side-by-side comparison of several offers for the same purchase
 - "What if" sliders to explore a larger down payment or a shorter term
 - Including mandatory insurance in the effective APR
 

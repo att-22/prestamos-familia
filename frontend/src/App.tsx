@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { Layout, PublicLayout } from '@/components/layout/Layout';
 import { Login } from '@/pages/Login';
 import { Dashboard } from '@/pages/Dashboard';
-import { VehicleDetail } from '@/pages/VehicleDetail';
+import { PurchaseDetail } from '@/pages/PurchaseDetail';
 import { ComparisonPage } from '@/pages/ComparisonPage';
 import { ComparisonsList } from '@/pages/ComparisonsList';
 import { PublicComparison } from '@/pages/PublicComparison';
@@ -54,9 +54,9 @@ function AppRoutes() {
         <PrivateRoute><Layout /></PrivateRoute>
       }>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/vehicles/:vehicleId" element={<VehicleDetail />} />
-        <Route path="/vehicles/:vehicleId/offers/:offerId/compare" element={<ComparisonPage />} />
-        <Route path="/compare/:vehicleId/:offerId" element={<ComparisonPage />} />
+        <Route path="/purchases/:purchaseId" element={<PurchaseDetail />} />
+        <Route path="/purchases/:purchaseId/offers/:offerId/compare" element={<ComparisonPage />} />
+        <Route path="/compare/:purchaseId/:offerId" element={<ComparisonPage />} />
         <Route path="/comparisons" element={<ComparisonsList />} />
         <Route path="/glossary" element={<GlossaryPage />} />
       </Route>

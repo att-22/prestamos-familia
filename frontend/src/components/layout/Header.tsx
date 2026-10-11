@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { Menu, X, LogOut, User, Car, Calculator, BookOpen } from 'lucide-react';
+import { Menu, X, LogOut, User, Wallet, ShoppingBag, Calculator, BookOpen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
@@ -9,7 +9,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { path: '/dashboard', label: 'Mis vehículos', icon: Car },
+    { path: '/dashboard', label: 'Mis compras', icon: ShoppingBag },
     { path: '/comparisons', label: 'Mis comparativas', icon: Calculator },
     { path: '/glossary', label: 'Glosario', icon: BookOpen },
   ];
@@ -19,7 +19,7 @@ export function Header() {
       <nav className="container-main" aria-label="Navegación principal">
         <div className="flex h-16 items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary-600">
-            <Car className="h-6 w-6" />
+            <Wallet className="h-6 w-6" />
             <span>Préstamos Familia</span>
           </Link>
 
