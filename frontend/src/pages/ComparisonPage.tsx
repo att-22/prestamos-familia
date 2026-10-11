@@ -107,6 +107,7 @@ export function ComparisonPage() {
               <h2 className="text-lg font-semibold text-gray-900">Guardar y compartir</h2>
               <p className="text-sm text-gray-600 mt-1">
                 Al guardar se crea un enlace que puedes enviar a la familia. Quien lo abra verá el análisis, pero no tus ingresos ni tus ahorros.
+                El enlace muestra la oferta tal como es ahora: si la cambias más adelante, guarda una comparativa nueva.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
