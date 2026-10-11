@@ -6,11 +6,9 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
+  # Sin filtro de rutas: los checks obligatorios deben ejecutarse en todos los PR
   pull_request:
     branches: [main]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
 
 concurrency:
@@ -22,6 +20,7 @@ permissions:
 
 jobs:
   test:
+    name: Backend tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -72,6 +71,7 @@ jobs:
         run: pytest -v --cov=app --cov-report=term-missing
 
   docker:
+    name: Backend image
     needs: test
     runs-on: ubuntu-latest
     steps:
