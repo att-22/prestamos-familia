@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,22 +14,30 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+const demoUsers = [
+  { label: 'Padre', email: 'padre@familia.com' },
+  { label: 'Madre', email: 'madre@familia.com' },
+  { label: 'Hijo', email: 'hijo@familia.com' },
+  { label: 'Tío', email: 'tio@familia.com' },
+];
+
 export function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '' },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const handleLogin = async (email: string) => {
     setIsLoading(true);
+    setLoginError(null);
     try {
-      await login(data.email);
-    } catch (error) {
-      console.error('Login failed:', error);
+      await login(email);
+    } catch {
+      setLoginError('No se ha podido iniciar sesión. Comprueba que el servidor está en marcha e inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -44,42 +51,40 @@ export function Login() {
             <Car className="h-8 w-8" />
             <span>Préstamos Familia</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Sign in</h1>
-          <p className="text-gray-600 mt-1">Enter your email to access your comparisons</p>
+          <h1 className="text-2xl font-bold text-gray-900">Iniciar sesión</h1>
+          <p className="text-gray-600 mt-1">Introduce tu email para ver tus comparativas</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(data => handleLogin(data.email))} className="space-y-4">
             <Input
               {...register('email')}
-              label="Email address"
+              label="Email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="tu@email.com"
               error={errors.email?.message}
               autoComplete="email"
               autoFocus
             />
+            {loginError && (
+              <p className="text-sm text-danger-600" role="alert">{loginError}</p>
+            )}
             <Button type="submit" className="w-full" size="lg" loading={isLoading}>
-              Continue with magic link
+              Entrar
             </Button>
           </form>
-          
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-3">Development shortcuts</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button variant="outline" size="sm" onClick={() => login('padre@familia.com')}>
-                Padre (demo)
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => login('madre@familia.com')}>
-                Madre (demo)
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => login('hijo@familia.com')}>
-                Hijo (demo)
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => login('tio@familia.com')}>
-                Tío (demo)
-              </Button>
+
+          {import.meta.env.DEV && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-600 text-center mb-3">Accesos rápidos (solo desarrollo)</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {demoUsers.map(({ label, email }) => (
+                  <Button key={email} variant="outline" size="sm" disabled={isLoading} onClick={() => handleLogin(email)}>
+                    {label} (demo)
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

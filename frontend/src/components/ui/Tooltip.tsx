@@ -26,11 +26,16 @@ export function Tooltip({ content, children, position = 'top' }: TooltipProps) {
   };
 
   return (
-    <div className="relative inline-flex" onMouseEnter={() => setIsOpen(true)} onMouseLeave={() => setIsOpen(false)}>
+    <div
+      className="relative inline-flex"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+      onClick={() => setIsOpen(open => !open)}
+    >
       {children}
       {isOpen && (
-        <div className={cn('fixed z-50', positions[position])}>
-          <div className="max-w-xs px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg">
+        <div className={cn('absolute z-50 w-max', positions[position])}>
+          <div className="max-w-xs px-3 py-2 text-sm font-normal text-white bg-gray-900 rounded-lg shadow-lg" role="tooltip">
             {content}
           </div>
           <div className={cn('absolute w-0 h-0 border-2 border-transparent', arrows[position])} />

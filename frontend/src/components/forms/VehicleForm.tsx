@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Input, Select } from '@/components/ui';
+import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { InfoTooltip } from '@/components/ui/Tooltip';
@@ -21,12 +21,13 @@ export type VehicleFormData = z.infer<typeof vehicleSchema>;
 interface VehicleFormProps {
   initialData?: Partial<VehicleFormData>;
   onSubmit: (data: VehicleFormData) => Promise<void>;
+  onCancel: () => void;
   isLoading?: boolean;
   submitLabel?: string;
 }
 
-export function VehicleForm({ initialData, onSubmit, isLoading, submitLabel = 'Guardar vehículo' }: VehicleFormProps) {
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<VehicleFormData>({
+export function VehicleForm({ initialData, onSubmit, onCancel, isLoading, submitLabel = 'Guardar vehículo' }: VehicleFormProps) {
+  const { register, handleSubmit, formState: { errors } } = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
       name: '',
@@ -112,7 +113,7 @@ export function VehicleForm({ initialData, onSubmit, isLoading, submitLabel = 'G
           />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <Button type="button" variant="secondary" onClick={() => window.history.back()}>
+            <Button type="button" variant="secondary" onClick={onCancel}>
               Cancelar
             </Button>
             <Button type="submit" loading={isLoading}>

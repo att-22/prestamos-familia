@@ -9,7 +9,7 @@ router = APIRouter(tags=["health"])
 async def health_check(session: Session = Depends(get_session)):
     """Health check para load balancers / Railway"""
     try:
-        session.exec(text("SELECT 1"))
+        session.connection().execute(text("SELECT 1"))
         return {"status": "ok", "database": "connected"}
     except Exception as e:
         return {"status": "error", "database": "disconnected", "error": str(e)}

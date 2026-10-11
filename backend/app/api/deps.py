@@ -1,15 +1,11 @@
-from typing import Generator, Optional
+from typing import Optional
 from uuid import UUID
 from fastapi import Depends, Header, HTTPException, status
 from sqlmodel import Session, select
-from jose import jwt, JWTError
 
-from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.security import decode_token
 from app.models.user import User
-
-settings = get_settings()
 
 
 def get_current_user_id(

@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
-from uuid import UUID
 
 
 @dataclass
@@ -88,7 +87,7 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
     # Intereses + comisiones totales (lo que pagas de más vs contado)
     total_interest_fees = round_eur(total_leasing_cost - input.price_cash)
     
-    # Ahorro pagando al contado (positivo = ahorras pagando contado)
+    # Diferencia contado - leasing (negativo = el leasing sale más caro)
     savings_vs_cash = round_eur(input.price_cash - total_leasing_cost)
     
     # TAE efectiva calculada (aproximación via VAN simplificada)
@@ -142,19 +141,23 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
 def calculate_effective_tae(financed_amount: Decimal, monthly_payment: Decimal, months: int, opening_fee: Decimal = Decimal("0")) -> Decimal:
     """
     Calcula la TAE efectiva (IRR) usando método numérico (Newton-Raphson simplificado).
-    Flujo de caja: -financed_amount - opening_fee al mes 0, +monthly_payment mes 1..n
+    Flujo de caja: recibes financed_amount - opening_fee al mes 0, pagas monthly_payment mes 1..n
     """
     # Valor inicial: TAE declarada como punto de partida
     # Buscamos r mensual tal que VAN = 0
     
+    net_received = financed_amount - opening_fee
+
     def npv(rate_monthly: Decimal) -> Decimal:
-        """Valor actual neto a tasa mensual dada"""
-        if rate_monthly <= 0:
-            return financed_amount + opening_fee - monthly_payment * months
+        """Valor actual de las cuotas menos lo recibido, a tasa mensual dada"""
         vp = Decimal("0")
         for n in range(1, months + 1):
             vp += monthly_payment / ((Decimal("1") + rate_monthly) ** n)
-        return vp - financed_amount - opening_fee
+        return vp - net_received
+
+    # Sin intereses (o cuotas que no cubren lo recibido): no hay tasa positiva
+    if monthly_payment * months <= net_received:
+        return Decimal("0.00")
     
     # Búsqueda binaria de la tasa mensual
     low = Decimal("0.00001")  # 0.001% mensual

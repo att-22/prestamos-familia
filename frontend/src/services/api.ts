@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { 
+  User,
   Vehicle, VehicleCreate, 
   LeasingOffer, LeasingOfferCreate,
   Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic

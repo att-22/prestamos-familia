@@ -80,6 +80,8 @@ export interface Comparison {
   user_id: string;
   vehicle_id: string;
   leasing_offer_id: string;
+  vehicle_name: string | null;
+  source_name: string | null;
   total_leasing_cost: string;
   total_interest_fees: string;
   savings_vs_cash: string;
@@ -113,11 +115,11 @@ export interface ComparisonPublic {
 export interface VehicleCreate {
   name: string;
   price_cash: string;
-  brand?: string;
-  model?: string;
-  year?: number;
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
   is_used?: boolean;
-  notes?: string;
+  notes?: string | null;
 }
 
 export interface LeasingOfferCreate {
@@ -132,9 +134,9 @@ export interface LeasingOfferCreate {
   opening_fee_percent?: string;
   early_repayment_fee_percent?: string;
   mandatory_insurance_year?: string;
-  residual_value?: string;
-  residual_value_percent?: string;
-  notes?: string;
+  residual_value?: string | null;
+  residual_value_percent?: string | null;
+  notes?: string | null;
 }
 
 export interface ComparisonCreate {

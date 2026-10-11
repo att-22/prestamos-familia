@@ -1,17 +1,17 @@
-import { Link, useLocation, NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { Menu, X, LogOut, User, Car } from 'lucide-react';
+import { Menu, X, LogOut, User, Car, Calculator, BookOpen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
 export function Header() {
   const { user, logout } = useAuth();
-  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/dashboard', label: 'Mis vehículos', icon: Car },
-    { path: '/comparisons', label: 'Mis comparativas', icon: null },
+    { path: '/comparisons', label: 'Mis comparativas', icon: Calculator },
+    { path: '/glossary', label: 'Glosario', icon: BookOpen },
   ];
 
   return (
@@ -34,7 +34,7 @@ export function Header() {
                   }`
                 }
               >
-                {item.icon && <item.icon className="h-4 w-4" />}
+                <item.icon className="h-4 w-4" />
                 {item.label}
               </NavLink>
             ))}
@@ -74,7 +74,7 @@ export function Header() {
                     }`
                   }
                 >
-                  {item.icon && <item.icon className="h-5 w-5" />}
+                  <item.icon className="h-5 w-5" />
                   {item.label}
                 </NavLink>
               ))}

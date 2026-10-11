@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.core.database import get_session
 from app.models.leasing_offer import LeasingOffer
@@ -18,7 +18,6 @@ async def create_leasing_offer(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
 ):
-    # Verificar que el vehículo pertenece al usuario
     vehicle = session.exec(
         select(Vehicle).where(Vehicle.id == offer_in.vehicle_id, Vehicle.user_id == user_id)
     ).first()
@@ -45,7 +44,7 @@ async def list_leasing_offers(
         query = query.where(LeasingOffer.vehicle_id == vehicle_id)
     
     offers = session.exec(
-        query.order_by(LeasingOffer.created_at.desc()).offset(skip).limit(limit)
+        query.order_by(col(LeasingOffer.created_at).desc()).offset(skip).limit(limit)
     ).all()
     return offers
 
@@ -62,3 +61,46 @@ async def get_leasing_offer(
         .where(LeasingOffer.id == offer_id, Vehicle.user_id == user_id)
     ).first()
     if not offer:
+        raise HTTPException(status_code=404, detail="Oferta no encontrada")
+    return offer
+
+
+@router.patch("/{offer_id}", response_model=LeasingOfferRead)
+async def update_leasing_offer(
+    offer_id: UUID,
+    offer_in: LeasingOfferUpdate,
+    user_id: UUID = Depends(get_current_user_id),
+    session: Session = Depends(get_session),
+):
+    offer = session.exec(
+        select(LeasingOffer)
+        .join(Vehicle)
+        .where(LeasingOffer.id == offer_id, Vehicle.user_id == user_id)
+    ).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Oferta no encontrada")
+    
+    for field, value in offer_in.model_dump(exclude_unset=True).items():
+        setattr(offer, field, value)
+    
+    session.add(offer)
+    session.commit()
+    session.refresh(offer)
+    return offer
+
+
+@router.delete("/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_leasing_offer(
+    offer_id: UUID,
+    user_id: UUID = Depends(get_current_user_id),
+    session: Session = Depends(get_session),
+):
+    offer = session.exec(
+        select(LeasingOffer)
+        .join(Vehicle)
+        .where(LeasingOffer.id == offer_id, Vehicle.user_id == user_id)
+    ).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Oferta no encontrada")
+    session.delete(offer)
+    session.commit()

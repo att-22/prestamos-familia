@@ -16,14 +16,14 @@ class AlertType(str, Enum):
 class Alert(BaseModel):
     type: AlertType
     message: str
-    code: str  # Código identificador para frontend: "TAE_HIGH", "DEBT_RATIO_HIGH", etc.
+    code: str
 
 
 class ComparisonBase(BaseModel):
     vehicle_id: UUID
     leasing_offer_id: UUID
-    user_monthly_income: Optional[Decimal] = Field(None, ge=0, max_digits=12, decimal_places=2)
-    user_available_savings: Optional[Decimal] = Field(None, ge=0, max_digits=12, decimal_places=2)
+    user_monthly_income: Optional[Decimal] = Field(None, ge=0)
+    user_available_savings: Optional[Decimal] = Field(None, ge=0)
 
 
 class ComparisonCreate(ComparisonBase):
@@ -52,7 +52,7 @@ class ComparisonResult(BaseModel):
     total_leasing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
-    effective_annual_rate: Decimal  # TAE real calculada
+    effective_annual_rate: Decimal
 
     # Contexto usuario
     monthly_income_percent: Optional[Decimal] = None
@@ -67,10 +67,14 @@ class ComparisonRead(BaseModel):
     user_id: UUID
     vehicle_id: UUID
     leasing_offer_id: UUID
+    vehicle_name: Optional[str] = None
+    source_name: Optional[str] = None
     total_leasing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
     monthly_income_percent: Optional[Decimal]
+    user_monthly_income: Optional[Decimal] = None
+    user_available_savings: Optional[Decimal] = None
     alerts_json: List[dict]
     shared_slug: str
     is_public: bool

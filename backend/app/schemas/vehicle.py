@@ -7,7 +7,7 @@ from typing import Optional
 
 class VehicleBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200, description="Nombre descriptivo: ej. 'Toyota Corolla 2024'")
-    price_cash: Decimal = Field(..., gt=0, max_digits=12, decimal_places=2, description="Precio al contado")
+    price_cash: Decimal = Field(..., gt=0, description="Precio al contado")
     brand: Optional[str] = Field(None, max_length=100)
     model: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1990, le=2030)
@@ -21,7 +21,7 @@ class VehicleCreate(VehicleBase):
 
 class VehicleUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
-    price_cash: Optional[Decimal] = Field(None, gt=0, max_digits=12, decimal_places=2)
+    price_cash: Optional[Decimal] = Field(None, gt=0)
     brand: Optional[str] = Field(None, max_length=100)
     model: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1990, le=2030)

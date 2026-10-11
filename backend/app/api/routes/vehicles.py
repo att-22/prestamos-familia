@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.core.database import get_session
 from app.models.vehicle import Vehicle
@@ -36,7 +36,7 @@ async def list_vehicles(
         .where(Vehicle.user_id == user_id)
         .offset(skip)
         .limit(limit)
-        .order_by(Vehicle.created_at.desc())
+        .order_by(col(Vehicle.created_at).desc())
     ).all()
     return vehicles
 

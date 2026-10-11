@@ -1,9 +1,14 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+from sqlalchemy import ForeignKey
 from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
+
+if TYPE_CHECKING:
+    from app.models.comparison import Comparison
+    from app.models.leasing_offer import LeasingOffer
 
 
 class Vehicle(SQLModel, table=True):
@@ -14,8 +19,7 @@ class Vehicle(SQLModel, table=True):
         sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, nullable=False),
     )
     user_id: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), nullable=False, index=True),
-        foreign_key="users.id",
+        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
     )
     name: str = Field(sa_column=Column(pg.VARCHAR(200), nullable=False))
     price_cash: Decimal = Field(
@@ -37,5 +41,11 @@ class Vehicle(SQLModel, table=True):
     )
 
     # Relationships
-    leasing_offers: list["LeasingOffer"] = Relationship(back_populates="vehicle")
-    comparisons: list["Comparison"] = Relationship(back_populates="vehicle")
+    leasing_offers: list["LeasingOffer"] = Relationship(
+        back_populates="vehicle",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
+    comparisons: list["Comparison"] = Relationship(
+        back_populates="vehicle",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
