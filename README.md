@@ -55,7 +55,7 @@ by unit tests.
 |-------|-------|
 | Backend | FastAPI, SQLModel, PostgreSQL 16, Alembic, JWT auth |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form + Zod |
-| Quality | pytest, ruff, mypy · Vitest, ESLint, `tsc` |
+| Quality | pytest, ruff, mypy · Vitest, Playwright, ESLint, `tsc` |
 | Tooling | Docker Compose, GitHub Actions |
 
 ## Project structure
@@ -71,6 +71,7 @@ backend/
   alembic/          database migrations
   tests/            unit tests for the services, API tests against PostgreSQL
 frontend/
+  e2e/              Playwright end-to-end tests
   src/
     components/     UI primitives, forms, comparison views, layout
     hooks/          auth context and TanStack Query hooks
@@ -115,6 +116,20 @@ npm run lint && npx tsc --noEmit && npm run test -- --run && npm run build
 The API tests run against a real PostgreSQL database inside a transaction that
 is rolled back after each test, so they leave no data behind.
 
+### End-to-end tests
+
+A Playwright suite in [`frontend/e2e`](frontend/e2e) drives the app in a real
+browser: signing in, creating purchases and offers, checking the calculated
+figures, saving a comparison and opening its public link as an anonymous visitor.
+Each test signs in as a fresh user, so tests do not share data.
+
+```bash
+docker compose up -d                # the tests need the app running
+cd frontend
+npx playwright install chromium     # first time only
+npm run test:e2e
+```
+
 After changing a model, generate a migration and review it before committing:
 
 ```bash
@@ -124,8 +139,9 @@ docker compose exec backend alembic upgrade head
 
 ## CI/CD
 
-Each half of the monorepo has its own GitHub Actions workflow, triggered only
-when files under its directory change, on pushes to `main` and on pull requests.
+Each half of the monorepo has its own GitHub Actions workflow, and a third one
+runs the end-to-end tests. All of them run on every pull request; on pushes to
+`main` the backend and frontend workflows only run when their directory changed.
 
 | Workflow | Job | What it does |
 |----------|-----|--------------|
@@ -133,6 +149,7 @@ when files under its directory change, on pushes to `main` and on pull requests.
 | `backend-ci.yml` | `docker` | Builds the production image to make sure it still builds |
 | `frontend-ci.yml` | `test` | ESLint, type check, Vitest and a production build |
 | `frontend-ci.yml` | `deploy` | Deploys to Vercel — a preview for pull requests, production on `main` |
+| `e2e.yml` | `e2e` | Starts PostgreSQL, the API and the production build of the frontend, then runs the Playwright suite against them. The report and traces are uploaded when a test fails |
 
 The deploy job is skipped until the `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
 `VERCEL_PROJECT_ID` repository secrets are set.
