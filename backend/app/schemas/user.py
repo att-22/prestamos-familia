@@ -1,7 +1,11 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
+
+from app.core.security import MAX_PASSWORD_BYTES
+
+MIN_PASSWORD_LENGTH = 10
 
 
 class UserBase(BaseModel):
@@ -9,19 +13,43 @@ class UserBase(BaseModel):
     name: Optional[str] = None
 
 
-class UserCreate(UserBase):
-    supabase_id: str
-
-
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(None, max_length=100)
 
 
 class UserRead(UserBase):
     id: UUID
-    supabase_id: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=MIN_PASSWORD_LENGTH)
+    name: Optional[str] = Field(None, max_length=100)
+    registration_code: str = ""
+
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > MAX_PASSWORD_BYTES:
+            raise ValueError(f"La contraseña no puede superar los {MAX_PASSWORD_BYTES} bytes")
+        return value
+
+
+class DevTokenRequest(BaseModel):
+    email: EmailStr
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead

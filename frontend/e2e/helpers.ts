@@ -1,6 +1,7 @@
-import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+export const PASSWORD = 'una-clave-larga-1';
 
 export interface Session {
   email: string;
@@ -9,17 +10,27 @@ export interface Session {
   headers: { Authorization: string };
 }
 
-// Cada test usa un usuario nuevo, así no comparten datos y pueden ir en paralelo
 export function uniqueEmail(): string {
   return `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@familia.com`;
 }
 
+/**
+ * Sesión del usuario de pruebas de este worker, sin datos de tests anteriores.
+ * Un usuario fijo por worker (y no uno nuevo por test) evita llenar la base de
+ * datos, y los tests de un mismo worker nunca se ejecutan a la vez.
+ */
 export async function createSession(request: APIRequestContext): Promise<Session> {
-  const email = uniqueEmail();
+  const email = `e2e-worker-${test.info().parallelIndex}@familia.com`;
   const response = await request.post(`${API_URL}/auth/dev-token`, { data: { email } });
   expect(response.ok()).toBeTruthy();
   const { access_token, user } = await response.json();
-  return { email, token: access_token, user, headers: { Authorization: `Bearer ${access_token}` } };
+  const headers = { Authorization: `Bearer ${access_token}` };
+
+  const purchases = await (await request.get(`${API_URL}/purchases`, { headers })).json();
+  for (const purchase of purchases) {
+    await request.delete(`${API_URL}/purchases/${purchase.id}`, { headers });
+  }
+  return { email, token: access_token, user, headers };
 }
 
 /** Deja la sesión iniciada sin pasar por la pantalla de login. */
@@ -33,12 +44,18 @@ export async function signIn(page: Page, session: Session): Promise<void> {
   );
 }
 
-export async function loginThroughUi(page: Page, email = uniqueEmail()): Promise<string> {
-  await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByRole('heading', { name: 'Mis compras' })).toBeVisible();
+/** Crea una cuenta con contraseña por API. Hay que borrarla al acabar con deleteAccount. */
+export async function registerAccount(request: APIRequestContext, email = uniqueEmail()): Promise<string> {
+  const response = await request.post(`${API_URL}/auth/register`, { data: { email, password: PASSWORD } });
+  expect(response.status()).toBe(201);
   return email;
+}
+
+export async function deleteAccount(request: APIRequestContext, email: string): Promise<void> {
+  const login = await request.post(`${API_URL}/auth/login`, { data: { email, password: PASSWORD } });
+  if (!login.ok()) return;
+  const { access_token } = await login.json();
+  await request.delete(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${access_token}` } });
 }
 
 export const CAR = { name: 'Seat León', price_cash: '25000', category: 'vehicle', brand: 'Seat', model: 'León', year: 2024 };

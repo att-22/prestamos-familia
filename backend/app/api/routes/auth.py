@@ -1,65 +1,116 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
+import secrets
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session, select
 
 from app.core.config import get_settings
 from app.core.database import get_session
-from app.core.security import create_access_token
+from app.core.rate_limit import AttemptLimiter
+from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User
-from app.schemas.user import UserRead, UserUpdate
+from app.schemas.user import (
+    DevTokenRequest,
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserRead,
+    UserUpdate,
+)
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 settings = get_settings()
 
-
-class MagicLinkRequest(BaseModel):
-    email: EmailStr
-
-
-class DevTokenRequest(BaseModel):
-    email: EmailStr
+# 5 fallos en 15 minutos por IP y email, tanto al entrar como al registrarse
+auth_limiter = AttemptLimiter(max_attempts=5, window_seconds=15 * 60)
 
 
-class MagicLinkResponse(BaseModel):
-    message: str
+def _limiter_key(request: Request, email: str) -> str:
+    client = request.client.host if request.client else "unknown"
+    return f"{client}:{email}"
 
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserRead
+def _check_not_blocked(key: str) -> None:
+    if auth_limiter.is_blocked(key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Demasiados intentos. Espera unos minutos y vuelve a probar.",
+        )
 
 
-@router.post("/magic-link", response_model=MagicLinkResponse)
-async def request_magic_link(request: MagicLinkRequest):
-    """
-    En producción: integrar con Supabase Auth API para enviar magic link.
-    Aquí solo documentamos el flujo.
-    """
-    # TODO: Llamar a Supabase Admin API: supabase.auth.admin.generate_link(...)
-    return {"message": f"Si {request.email} existe, recibirás un magic link. En desarrollo, usa /auth/dev-token"}
+def _token_response(user: User) -> TokenResponse:
+    token = create_access_token(str(user.id), user.email)
+    return TokenResponse(access_token=token, user=UserRead.model_validate(user))
+
+
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+async def register(data: RegisterRequest, request: Request, session: Session = Depends(get_session)):
+    """Crea la cuenta de un email autorizado. Hace falta el código de registro si está configurado."""
+    email = data.email.lower()
+    key = _limiter_key(request, email)
+    _check_not_blocked(key)
+
+    code_ok = not settings.REGISTRATION_CODE or secrets.compare_digest(
+        data.registration_code.encode("utf-8"), settings.REGISTRATION_CODE.encode("utf-8")
+    )
+    # Mismo error para email no autorizado y código incorrecto: no se revela cuál falla
+    if not settings.is_email_allowed(email) or not code_ok:
+        auth_limiter.record_failure(key)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Este email no está autorizado o el código de invitación no es correcto.",
+        )
+
+    user = session.exec(select(User).where(User.email == email)).first()
+    if user and user.password_hash:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ya existe una cuenta con este email.")
+
+    if user is None:
+        user = User(email=email, name=data.name or email.split("@")[0].capitalize())
+    user.password_hash = hash_password(data.password)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    auth_limiter.reset(key)
+    return _token_response(user)
+
+
+@router.post("/login", response_model=TokenResponse)
+async def login(data: LoginRequest, request: Request, session: Session = Depends(get_session)):
+    email = data.email.lower()
+    key = _limiter_key(request, email)
+    _check_not_blocked(key)
+
+    user = session.exec(select(User).where(User.email == email)).first()
+    if not verify_password(data.password, user.password_hash if user else None) or user is None:
+        auth_limiter.record_failure(key)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email o contraseña incorrectos.",
+        )
+
+    auth_limiter.reset(key)
+    return _token_response(user)
 
 
 @router.post("/dev-token", response_model=TokenResponse)
-async def dev_token(request: DevTokenRequest, session: Session = Depends(get_session)):
+async def dev_token(data: DevTokenRequest, session: Session = Depends(get_session)):
     """
-    SOLO DESARROLLO: Genera token JWT directo para testing sin Supabase.
+    SOLO DESARROLLO Y TESTS: entra como cualquier email sin contraseña.
     """
     if settings.ENVIRONMENT == "production":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
 
-    email = request.email
+    email = data.email.lower()
     user = session.exec(select(User).where(User.email == email)).first()
     if not user:
-        user = User(email=email, supabase_id=f"dev-{email}", name=email.split("@")[0].capitalize())
+        user = User(email=email, name=email.split("@")[0].capitalize())
         session.add(user)
         session.commit()
         session.refresh(user)
-    
-    # El 'sub' es el supabase_id, igual que en un JWT real de Supabase
-    token = create_access_token(user.supabase_id, user.email)
-    return TokenResponse(access_token=token, user=UserRead.model_validate(user))
+
+    return _token_response(user)
 
 
 @router.get("/me", response_model=UserRead)
@@ -79,3 +130,13 @@ async def update_me(
     session.commit()
     session.refresh(current_user)
     return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Borra la cuenta y, en cascada, sus compras, ofertas y comparativas."""
+    session.delete(current_user)
+    session.commit()

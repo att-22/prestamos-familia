@@ -41,8 +41,8 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://prestamos:prestamos_test@localhost:5432/prestamos_test
-      SUPABASE_JWT_SECRET: test-secret
-      SUPABASE_URL: http://localhost
+      JWT_SECRET: test-secret
+      ALLOWED_EMAILS: "@familia.com"
       ENVIRONMENT: test
 
     steps:
