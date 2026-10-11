@@ -95,6 +95,7 @@ class ComparisonPublic(BaseModel):
     tae: Decimal
     months: int
     monthly_payment: Decimal
+    residual_value: Optional[Decimal] = None
     total_leasing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal

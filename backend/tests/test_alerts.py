@@ -81,3 +81,12 @@ def test_financing_cheaper_than_cash_is_not_reported_as_cash_saving():
 def test_effective_tae_higher_than_declared():
     assert "EFFECTIVE_TAE_HIGHER" in alerts_for(effective_annual_rate=Decimal("6.5"))
     assert "EFFECTIVE_TAE_HIGHER" not in alerts_for(effective_annual_rate=Decimal("5.0"))
+
+
+def test_balloon_payment_alert():
+    assert "BALLOON_PAYMENT" not in alerts_for()
+    assert alerts_for(residual_value=Decimal("2500"))["BALLOON_PAYMENT"].type == AlertType.INFO
+
+    big = alerts_for(residual_value=Decimal("10000"))["BALLOON_PAYMENT"]
+    assert big.type == AlertType.WARNING
+    assert "10000" in big.message and "40.0%" in big.message

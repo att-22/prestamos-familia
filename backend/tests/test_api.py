@@ -98,3 +98,32 @@ def test_deleting_vehicle_removes_offers_and_comparisons(client, auth_headers):
     assert client.delete(f"/vehicles/{vehicle['id']}", headers=auth_headers).status_code == 204
     assert client.get("/leasing-offers", headers=auth_headers).json() == []
     assert client.get("/comparisons", headers=auth_headers).json() == []
+
+
+def test_residual_value_flows_through_calculation_and_public_link(client, auth_headers):
+    vehicle = client.post("/vehicles", json=VEHICLE, headers=auth_headers).json()
+    offer = client.post(
+        "/leasing-offers",
+        json={
+            "vehicle_id": vehicle["id"],
+            "source_name": "Financiera Multiopción",
+            "down_payment": "5000",
+            "tin": "6.5",
+            "tae": "6.7",
+            "months": 48,
+            "monthly_payment": "291.32",
+            "residual_value_percent": "40",
+        },
+        headers=auth_headers,
+    ).json()
+    body = {"vehicle_id": vehicle["id"], "leasing_offer_id": offer["id"]}
+
+    result = client.post("/comparisons/calculate", json=body, headers=auth_headers).json()
+    assert result["residual_value"] == "10000.00"
+    assert result["total_leasing_cost"] == "28983.36"
+    assert "BALLOON_PAYMENT" in {a["code"] for a in result["alerts"]}
+
+    saved = client.post("/comparisons", json=body, headers=auth_headers).json()
+    assert saved["total_leasing_cost"] == "28983.36"
+    public = client.get(f"/comparisons/public/{saved['shared_slug']}").json()
+    assert public["residual_value"] == "10000.00"

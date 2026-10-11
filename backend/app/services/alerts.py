@@ -34,6 +34,7 @@ def generate_alerts(
     monthly_income_percent: Optional[Decimal] = None,
     savings_after_down_payment: Optional[Decimal] = None,
     user_available_savings: Optional[Decimal] = None,
+    residual_value: Optional[Decimal] = None,
 ) -> List[Alert]:
     """Genera alertas y consejos basados en reglas de sentido comun financiero"""
     alerts = []
@@ -117,6 +118,18 @@ def generate_alerts(
             code="MANDATORY_INSURANCE"
         ))
     
+    # Cuota final / valor residual
+    if residual_value is not None and residual_value > Decimal("0"):
+        residual_percent = (residual_value / price_cash * Decimal("100")).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+        alerts.append(Alert(
+            type=AlertType.WARNING if residual_percent >= Decimal("20") else AlertType.INFO,
+            message=(
+                f"Al terminar las cuotas quedan {residual_value}€ por pagar ({residual_percent}% del precio) para quedarte el coche. "
+                "La cuota mensual es baja por eso. Si no puedes pagarlos tendras que refinanciar o devolver el coche."
+            ),
+            code="BALLOON_PAYMENT"
+        ))
+
     # === ALERTAS DE ENDEUDAMIENTO ===
     
     if monthly_income_percent is not None:

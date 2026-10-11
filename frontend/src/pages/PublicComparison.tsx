@@ -64,6 +64,12 @@ export function PublicComparison() {
               <p className="text-gray-500">Plazo</p>
               <p className="font-medium">{comparison.months} meses</p>
             </div>
+            {comparison.residual_value !== null && (
+              <div>
+                <p className="text-gray-500">Cuota final</p>
+                <p className="font-medium">{formatCurrency(comparison.residual_value)}</p>
+              </div>
+            )}
             <div>
               <p className="text-gray-500">TIN</p>
               <p className="font-medium">{formatPercent(comparison.tin)}</p>
