@@ -186,7 +186,12 @@ function OfferCard({ offer, vehiclePrice, onEdit, onDelete }: {
   const totalPayments = parseFloat(offer.monthly_payment) * offer.months;
   const insurance = parseFloat(offer.mandatory_insurance_year) * offer.months / 12;
   const fees = parseFloat(offer.opening_fee) + (price - downPayment) * parseFloat(offer.opening_fee_percent) / 100;
-  const totalCost = downPayment + totalPayments + insurance + fees;
+  const residual = offer.residual_value !== null
+    ? parseFloat(offer.residual_value)
+    : offer.residual_value_percent !== null
+      ? price * parseFloat(offer.residual_value_percent) / 100
+      : 0;
+  const totalCost = downPayment + totalPayments + residual + insurance + fees;
   const extraCost = totalCost - price;
 
   return (
@@ -200,6 +205,12 @@ function OfferCard({ offer, vehiclePrice, onEdit, onDelete }: {
             <span>TIN: {formatPercent(offer.tin)}</span>
             <span>•</span>
             <span>TAE: {formatPercent(offer.tae)}</span>
+            {residual > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-warning-600 font-medium">Cuota final: {formatCurrency(residual)}</span>
+              </>
+            )}
           </div>
         </div>
         <Badge variant={extraCost > 0 ? 'danger' : 'success'}>

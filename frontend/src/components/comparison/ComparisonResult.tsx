@@ -35,6 +35,12 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
                 <span className="text-gray-600">Total cuotas ({result.months} meses)</span>
                 <span className="font-medium">{formatCurrency(result.total_payments)}</span>
               </div>
+              {result.residual_value !== null && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Cuota final para quedarte el coche</span>
+                  <span className="font-medium">{formatCurrency(result.residual_value)}</span>
+                </div>
+              )}
               {parseFloat(result.total_insurance) > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Seguros obligatorios</span>
@@ -71,7 +77,7 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
               />
               <Detail
                 label="TAE efectiva"
-                help="TAE real calculada con las cuotas y la comisión de apertura que has introducido. Puede diferir de la TAE declarada."
+                help="TAE real calculada con las cuotas, la cuota final y la comisión de apertura que has introducido. Puede diferir de la TAE declarada."
                 value={formatPercent(result.effective_annual_rate)}
               />
               <Detail

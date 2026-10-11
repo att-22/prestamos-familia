@@ -104,6 +104,7 @@ export interface ComparisonPublic {
   tae: string;
   months: number;
   monthly_payment: string;
+  residual_value: string | null;
   total_leasing_cost: string;
   total_interest_fees: string;
   savings_vs_cash: string;

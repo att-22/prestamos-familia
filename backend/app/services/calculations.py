@@ -53,6 +53,19 @@ def round_eur(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+def resolve_residual_value(
+    price_cash: Decimal,
+    residual_value: Optional[Decimal],
+    residual_value_percent: Optional[Decimal],
+) -> Decimal:
+    """Cuota final en euros. Si se indican importe y porcentaje, manda el importe."""
+    if residual_value is not None:
+        return round_eur(residual_value)
+    if residual_value_percent is not None:
+        return round_eur(price_cash * residual_value_percent / Decimal("100"))
+    return Decimal("0.00")
+
+
 def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: Optional[Decimal] = None, user_available_savings: Optional[Decimal] = None) -> CalculationResult:
     """
     Calcula la comparación completa entre pago al contado y leasing/préstamo.
@@ -62,7 +75,9 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
     - Total cuotas = Cuota mensual × Meses
     - Total seguros = Seguro anual × (Meses / 12)
     - Total comisiones = Comisión apertura + (Comisión apertura % × Importe financiado)
-    - Coste total leasing = Entrada + Total cuotas + Total seguros + Total comisiones
+    - Coste total leasing = Entrada + Total cuotas + Cuota final + Total seguros + Total comisiones
+      (la cuota final / valor residual es lo que hay que pagar para quedarse el coche,
+      que es con lo que se compara el pago al contado)
     - Intereses + comisiones = Coste total leasing - Precio contado
     - Ahorro contado = Precio contado - Coste total leasing (negativo = leasing más caro)
     - TAE efectiva = Calculada vía VAN (aproximación)
@@ -81,8 +96,11 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
     opening_fee_calculated = round_eur(input.opening_fee + (financed_amount * input.opening_fee_percent / Decimal("100")))
     total_fees = round_eur(opening_fee_calculated)
     
+    # Cuota final para quedarse el coche (0 si la oferta no tiene)
+    residual_value = resolve_residual_value(input.price_cash, input.residual_value, input.residual_value_percent)
+    
     # Coste total del leasing
-    total_leasing_cost = round_eur(input.down_payment + total_payments + total_insurance + total_fees)
+    total_leasing_cost = round_eur(input.down_payment + total_payments + residual_value + total_insurance + total_fees)
     
     # Intereses + comisiones totales (lo que pagas de más vs contado)
     total_interest_fees = round_eur(total_leasing_cost - input.price_cash)
@@ -101,6 +119,7 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
             monthly_payment=input.monthly_payment,
             months=input.months,
             opening_fee=opening_fee_calculated,
+            residual_value=residual_value,
         )
     else:
         effective_annual_rate = Decimal("0")
@@ -124,7 +143,7 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
         opening_fee=input.opening_fee,
         early_repayment_fee_percent=input.early_repayment_fee_percent,
         mandatory_insurance_year=input.mandatory_insurance_year,
-        residual_value=input.residual_value,
+        residual_value=residual_value if residual_value > 0 else None,
         financed_amount=financed_amount,
         total_payments=total_payments,
         total_insurance=total_insurance,
@@ -138,10 +157,17 @@ def calculate_leasing_comparison(input: CalculationInput, user_monthly_income: O
     )
 
 
-def calculate_effective_tae(financed_amount: Decimal, monthly_payment: Decimal, months: int, opening_fee: Decimal = Decimal("0")) -> Decimal:
+def calculate_effective_tae(
+    financed_amount: Decimal,
+    monthly_payment: Decimal,
+    months: int,
+    opening_fee: Decimal = Decimal("0"),
+    residual_value: Decimal = Decimal("0"),
+) -> Decimal:
     """
     Calcula la TAE efectiva (IRR) usando método numérico (Newton-Raphson simplificado).
     Flujo de caja: recibes financed_amount - opening_fee al mes 0, pagas monthly_payment mes 1..n
+    y, si la hay, la cuota final (residual_value) junto con la última cuota
     """
     # Valor inicial: TAE declarada como punto de partida
     # Buscamos r mensual tal que VAN = 0
@@ -153,10 +179,11 @@ def calculate_effective_tae(financed_amount: Decimal, monthly_payment: Decimal, 
         vp = Decimal("0")
         for n in range(1, months + 1):
             vp += monthly_payment / ((Decimal("1") + rate_monthly) ** n)
+        vp += residual_value / ((Decimal("1") + rate_monthly) ** months)
         return vp - net_received
 
     # Sin intereses (o cuotas que no cubren lo recibido): no hay tasa positiva
-    if monthly_payment * months <= net_received:
+    if monthly_payment * months + residual_value <= net_received:
         return Decimal("0.00")
     
     # Búsqueda binaria de la tasa mensual

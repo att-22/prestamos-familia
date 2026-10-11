@@ -164,21 +164,23 @@ export function LeasingOfferForm({ initialData, onSubmit, onCancel, isLoading, s
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               {...register('residual_value')}
-              label="Valor residual (&euro;) - opcional"
+              label="Cuota final / valor residual (&euro;)"
               type="number"
               step="0.01"
               min="0"
-              placeholder="Solo leasing puro"
+              placeholder="Solo si queda un pago al final"
+              helperText="Lo que hay que pagar al acabar las cuotas para quedarte el coche."
               error={errors.residual_value?.message}
             />
             <Input
               {...register('residual_value_percent')}
-              label="Valor residual % - opcional"
+              label="...o como % del precio"
               type="number"
               step="0.01"
               min="0"
               max="100"
               placeholder="% sobre precio"
+              helperText="Solo se usa si no indicas el importe en euros."
               error={errors.residual_value_percent?.message}
             />
           </div>

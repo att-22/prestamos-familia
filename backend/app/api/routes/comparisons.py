@@ -10,7 +10,12 @@ from app.models.comparison import Comparison
 from app.models.vehicle import Vehicle
 from app.models.leasing_offer import LeasingOffer
 from app.schemas.comparison import ComparisonCreate, ComparisonRead, ComparisonResult, ComparisonPublic
-from app.services.calculations import calculate_leasing_comparison, CalculationInput, CalculationResult
+from app.services.calculations import (
+    calculate_leasing_comparison,
+    resolve_residual_value,
+    CalculationInput,
+    CalculationResult,
+)
 from app.services.alerts import generate_alerts
 from app.api.deps import get_current_user_id
 
@@ -75,6 +80,7 @@ def _compute(
         monthly_income_percent=result.monthly_income_percent,
         savings_after_down_payment=result.savings_after_down_payment,
         user_available_savings=comparison_in.user_available_savings,
+        residual_value=result.residual_value,
     )
 
     alerts_json = [{"type": a.type.value, "message": a.message, "code": a.code} for a in alerts]
@@ -169,6 +175,8 @@ async def get_public_comparison(
     if not vehicle or not offer:
         raise HTTPException(status_code=404, detail="Datos incompletos")
     
+    residual_value = resolve_residual_value(vehicle.price_cash, offer.residual_value, offer.residual_value_percent)
+
     return ComparisonPublic(
         vehicle_name=vehicle.name,
         price_cash=vehicle.price_cash,
@@ -178,6 +186,7 @@ async def get_public_comparison(
         tae=offer.tae,
         months=offer.months,
         monthly_payment=offer.monthly_payment,
+        residual_value=residual_value if residual_value > 0 else None,
         total_leasing_cost=comparison.total_leasing_cost,
         total_interest_fees=comparison.total_interest_fees,
         savings_vs_cash=comparison.savings_vs_cash,
