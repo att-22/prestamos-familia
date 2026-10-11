@@ -1,67 +1,45 @@
 from typing import Optional
 from uuid import UUID
 from fastapi import Depends, Header, HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.core.database import get_session
 from app.core.security import decode_token
 from app.models.user import User
 
 
-def get_current_user_id(
+def get_current_user(
     authorization: Optional[str] = Header(None),
     session: Session = Depends(get_session),
-) -> UUID:
-    """Extrae user_id del JWT de Supabase"""
+) -> User:
+    """Usuario al que pertenece el JWT de la cabecera Authorization."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token de autorización requerido",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    token = authorization.replace("Bearer ", "")
-    token_data = decode_token(token)
-    
+
+    token_data = decode_token(authorization.removeprefix("Bearer "))
+    invalid = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token inválido o expirado",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     if not token_data:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido o expirado",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Verificar/crear usuario en nuestra BD
-    user = session.exec(select(User).where(User.supabase_id == token_data.user_id)).first()
-    if not user:
-        # Crear usuario automáticamente (primer login)
-        user = User(supabase_id=token_data.user_id, email=token_data.email)
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-    
-    return user.id
+        raise invalid
 
+    try:
+        user_id = UUID(token_data.user_id)
+    except ValueError:
+        raise invalid
 
-def get_current_user(
-    user_id: UUID = Depends(get_current_user_id),
-    session: Session = Depends(get_session),
-) -> User:
+    # Un token válido de una cuenta ya borrada tampoco sirve
     user = session.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        raise invalid
     return user
 
 
-# Dependency opcional (para endpoints públicos que pueden tener user)
-def get_optional_user_id(
-    authorization: Optional[str] = Header(None),
-    session: Session = Depends(get_session),
-) -> Optional[UUID]:
-    if not authorization or not authorization.startswith("Bearer "):
-        return None
-    token = authorization.replace("Bearer ", "")
-    token_data = decode_token(token)
-    if not token_data:
-        return None
-    user = session.exec(select(User).where(User.supabase_id == token_data.user_id)).first()
-    return user.id if user else None
+def get_current_user_id(current_user: User = Depends(get_current_user)) -> UUID:
+    return current_user.id

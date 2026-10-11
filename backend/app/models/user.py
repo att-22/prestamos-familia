@@ -14,7 +14,9 @@ class User(SQLModel, table=True):
     )
     email: str = Field(sa_column=Column(pg.VARCHAR(255), unique=True, index=True, nullable=False))
     name: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
-    supabase_id: str = Field(sa_column=Column(pg.VARCHAR(255), unique=True, index=True, nullable=False))
+    # Hash bcrypt. Vacío en los usuarios de desarrollo creados con /auth/dev-token,
+    # que no pueden iniciar sesión con contraseña.
+    password_hash: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(255), nullable=True))
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),

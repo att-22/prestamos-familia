@@ -4,7 +4,6 @@ export interface User {
   id: string;
   email: string;
   name: string | null;
-  supabase_id: string;
   created_at: string;
   updated_at: string;
 }

@@ -28,7 +28,9 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Un 401 al entrar o registrarse es una contraseña incorrecta, no una sesión caducada
+    const isAuthAttempt = /^\/auth\/(login|register)$/.test(error.config?.url ?? '');
+    if (error.response?.status === 401 && !isAuthAttempt) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -38,9 +40,21 @@ api.interceptors.response.use(
 );
 
 // Auth
+export interface AuthResponse {
+  access_token: string;
+  user: User;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  registration_code: string;
+}
+
 export const authApi = {
-  devToken: (email: string) => 
-    api.post<{ access_token: string; user: User }>('/auth/dev-token', { email }),
+  login: (email: string, password: string) => api.post<AuthResponse>('/auth/login', { email, password }),
+  register: (data: RegisterData) => api.post<AuthResponse>('/auth/register', data),
+  devToken: (email: string) => api.post<AuthResponse>('/auth/dev-token', { email }),
   me: () => api.get<User>('/auth/me'),
 };
 

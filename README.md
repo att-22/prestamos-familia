@@ -53,7 +53,7 @@ by unit tests.
 
 | Layer | Tools |
 |-------|-------|
-| Backend | FastAPI, SQLModel, PostgreSQL 16, Alembic, JWT auth |
+| Backend | FastAPI, SQLModel, PostgreSQL 16, Alembic, JWT auth with bcrypt passwords |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form + Zod |
 | Quality | pytest, ruff, mypy · Vitest, Playwright, ESLint, `tsc` |
 | Tooling | Docker Compose, GitHub Actions |
@@ -95,9 +95,17 @@ docker compose up -d --build
 | API | http://localhost:8000 |
 | API docs (Swagger) | http://localhost:8000/docs |
 
-Migrations run automatically when the backend container starts. In development
-the login screen has shortcut buttons that sign in as demo users, so no account
-setup is needed.
+Migrations run automatically when the backend container starts.
+
+To get in, either use the demo buttons on the login screen (development only),
+or create an account: by default any `@familia.com` address can register and no
+registration code is needed. To use real addresses, put them in a `.env` file
+next to `docker-compose.yml`:
+
+```env
+ALLOWED_EMAILS=mum@example.com,dad@example.com
+REGISTRATION_CODE=something-only-the-family-knows
+```
 
 ## Tests and checks
 
@@ -164,8 +172,9 @@ environments:
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `SUPABASE_JWT_SECRET` | Secret used to sign and verify JWTs |
-| `SUPABASE_URL` | Supabase project URL |
+| `JWT_SECRET` | Secret used to sign and verify JWTs. At least 32 characters in production |
+| `ALLOWED_EMAILS` | Comma-separated addresses or domains (`@example.org`) allowed to register |
+| `REGISTRATION_CODE` | Shared secret required to register. Mandatory in production |
 | `ENVIRONMENT` | `development`, `test` or `production` |
 | `CORS_ORIGINS` | Comma-separated list of allowed origins |
 
@@ -175,15 +184,33 @@ environments:
 |----------|-------------|
 | `VITE_API_URL` | Base URL of the backend API |
 
-## Status and roadmap
+## Accounts and access
 
-The app is fully usable locally. It is not deployed yet because sign-in currently
-relies on a development-only endpoint (`POST /auth/dev-token`), which is disabled
-when `ENVIRONMENT=production`.
+The app is meant for a closed group, so there is no open sign-up:
 
-Planned next:
+- **Allow-list.** Only addresses listed in `ALLOWED_EMAILS` can create an
+  account. An entry is either an exact address or a whole domain (`@example.org`).
+- **Registration code.** Registering also requires `REGISTRATION_CODE`, a shared
+  secret handed out by whoever runs the app. Emails are not verified, so this is
+  what stops a stranger from claiming an allowed address first. It is mandatory
+  in production.
+- **Passwords** are at least 10 characters and stored as bcrypt hashes.
+- **Brute force.** Five failed attempts for an address from the same IP block
+  further attempts for 15 minutes. The counter is kept in memory, which is
+  enough for a single backend instance.
+- **Forgotten passwords** are reset by the administrator, as there is no email
+  service:
 
-- Production sign-in with email magic links
+  ```bash
+  docker compose exec backend python -m app.cli reset-password someone@example.com
+  ```
+
+`POST /auth/dev-token`, used by the demo buttons and the tests, signs in as any
+address without a password and returns 404 when `ENVIRONMENT=production`.
+
+## Roadmap
+
+- Deploy: the pipeline is ready, pending hosting for the API and its database
 - Side-by-side comparison of several offers for the same purchase
 - "What if" sliders to explore a larger down payment or a shorter term
 - Including mandatory insurance in the effective APR

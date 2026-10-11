@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '@/services/api';
+import { authApi, type AuthResponse, type RegisterData } from '@/services/api';
 import type { User } from '@/types/api';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  /** Solo en desarrollo: entra como un usuario de demostración sin contraseña. */
+  devLogin: (email: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -30,15 +33,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string) => {
-    // En desarrollo usamos dev-token, en producción sería magic link
-    const response = await authApi.devToken(email);
-    const { access_token, user: userData } = response.data;
+  const startSession = ({ access_token, user: userData }: AuthResponse) => {
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('user', JSON.stringify(userData));
     setToken(access_token);
     setUser(userData);
     navigate('/dashboard');
+  };
+
+  const login = async (email: string, password: string) => {
+    startSession((await authApi.login(email, password)).data);
+  };
+
+  const register = async (data: RegisterData) => {
+    startSession((await authApi.register(data)).data);
+  };
+
+  const devLogin = async (email: string) => {
+    startSession((await authApi.devToken(email)).data);
   };
 
   const logout = () => {
@@ -50,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register, devLogin, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
