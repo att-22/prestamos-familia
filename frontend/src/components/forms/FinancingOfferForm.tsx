@@ -106,6 +106,18 @@ export function FinancingOfferForm({ initialData, onSubmit, onCancel, isLoading,
               placeholder="60"
               error={errors.months?.message}
             />
+            <div className="col-span-full -mt-2 text-sm text-gray-500">
+              <InfoTooltip
+                label="&iquest;Qu&eacute; diferencia hay entre TIN y TAE?"
+                content={
+                  <div className="space-y-2">
+                    <p><strong>TIN:</strong> Inter&eacute;s nominal, no incluye comisiones ni seguros.</p>
+                    <p><strong>TAE:</strong> Coste real total anual. Incluye comisiones, seguros y frecuencia de pagos.</p>
+                    <p className="text-warning-500">Si la TAE supera al TIN en m&aacute;s de 1 punto, revisa comisiones y seguros obligatorios.</p>
+                  </div>
+                }
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -164,37 +176,26 @@ export function FinancingOfferForm({ initialData, onSubmit, onCancel, isLoading,
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               {...register('residual_value')}
-              label="Cuota final / valor residual (&euro;)"
+              label="Cuota final (&euro;)"
               type="number"
               step="0.01"
               min="0"
               placeholder="Solo si queda un pago al final"
-              helperText="Lo que hay que pagar al acabar las cuotas para que sea tuyo."
+              helperText="Tambi&eacute;n llamada valor residual: lo que queda por pagar al acabar las cuotas."
               error={errors.residual_value?.message}
             />
             <Input
               {...register('residual_value_percent')}
-              label="...o como % del precio"
+              label="Cuota final (% del precio)"
               type="number"
               step="0.01"
               min="0"
               max="100"
               placeholder="% sobre precio"
-              helperText="Solo se usa si no indicas el importe en euros."
+              helperText="Alternativa al importe en euros. Si rellenas los dos, cuenta el importe."
               error={errors.residual_value_percent?.message}
             />
           </div>
-
-          <InfoTooltip
-            label="Diferencia TIN vs TAE"
-            content={
-              <div className="space-y-2">
-                <p><strong>TIN:</strong> Inter&eacute;s nominal, no incluye comisiones ni seguros.</p>
-                <p><strong>TAE:</strong> Coste real total anual. Incluye comisiones, seguros y frecuencia de pagos.</p>
-                <p className="text-warning-600">Si la TAE supera al TIN en m&aacute;s de 1 punto, revisa comisiones y seguros obligatorios.</p>
-              </div>
-            }
-          />
 
           <Input
             {...register('notes')}
