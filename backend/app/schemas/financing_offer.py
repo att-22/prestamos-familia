@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Optional
 
 
-class LeasingOfferBase(BaseModel):
+class FinancingOfferBase(BaseModel):
     source_name: str = Field(..., min_length=1, max_length=200, description="Concesionario/Banco")
     down_payment: Decimal = Field(..., ge=0, description="Entrada inicial")
     tin: Decimal = Field(..., ge=0, le=100, description="TIN % anual")
@@ -21,11 +21,11 @@ class LeasingOfferBase(BaseModel):
     notes: Optional[str] = None
 
 
-class LeasingOfferCreate(LeasingOfferBase):
-    vehicle_id: UUID
+class FinancingOfferCreate(FinancingOfferBase):
+    purchase_id: UUID
 
 
-class LeasingOfferUpdate(BaseModel):
+class FinancingOfferUpdate(BaseModel):
     source_name: Optional[str] = Field(None, min_length=1, max_length=200)
     down_payment: Optional[Decimal] = Field(None, ge=0)
     tin: Optional[Decimal] = Field(None, ge=0, le=100)
@@ -41,9 +41,9 @@ class LeasingOfferUpdate(BaseModel):
     notes: Optional[str] = None
 
 
-class LeasingOfferRead(LeasingOfferBase):
+class FinancingOfferRead(FinancingOfferBase):
     id: UUID
-    vehicle_id: UUID
+    purchase_id: UUID
     created_at: datetime
     updated_at: datetime
 

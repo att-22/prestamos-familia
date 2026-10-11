@@ -41,9 +41,9 @@ export function ComparisonsList() {
           <CardContent className="py-12 text-center">
             <Calculator className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No hay comparativas guardadas</h3>
-            <p className="text-gray-600 mb-4">Analiza una oferta desde la página de un vehículo y guárdala</p>
+            <p className="text-gray-600 mb-4">Analiza una oferta desde la página de una compra y guárdala</p>
             <Link to="/dashboard">
-              <Button>Ir a mis vehículos</Button>
+              <Button>Ir a mis compras</Button>
             </Link>
           </CardContent>
         </Card>
@@ -68,7 +68,7 @@ function ComparisonCard({ comparison, onDelete }: { comparison: Comparison; onDe
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h3 className="font-semibold text-gray-900">
-                {comparison.vehicle_name ?? 'Comparativa'}
+                {comparison.purchase_name ?? 'Comparativa'}
                 {comparison.source_name && <span className="font-normal text-gray-500"> · {comparison.source_name}</span>}
               </h3>
               <Badge variant={extraCost > 0 ? 'danger' : 'success'}>

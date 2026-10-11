@@ -9,11 +9,14 @@ export interface User {
   updated_at: string;
 }
 
-export interface Vehicle {
+export type PurchaseCategory = 'vehicle' | 'home' | 'renovation' | 'electronics' | 'other';
+
+export interface Purchase {
   id: string;
   user_id: string;
   name: string;
   price_cash: string; // Decimal as string
+  category: PurchaseCategory;
   brand: string | null;
   model: string | null;
   year: number | null;
@@ -23,9 +26,9 @@ export interface Vehicle {
   updated_at: string;
 }
 
-export interface LeasingOffer {
+export interface FinancingOffer {
   id: string;
-  vehicle_id: string;
+  purchase_id: string;
   source_name: string;
   down_payment: string;
   tin: string;
@@ -66,7 +69,7 @@ export interface ComparisonResult {
   total_payments: string;
   total_insurance: string;
   total_fees: string;
-  total_leasing_cost: string;
+  total_financing_cost: string;
   total_interest_fees: string;
   savings_vs_cash: string;
   effective_annual_rate: string;
@@ -78,11 +81,11 @@ export interface ComparisonResult {
 export interface Comparison {
   id: string;
   user_id: string;
-  vehicle_id: string;
-  leasing_offer_id: string;
-  vehicle_name: string | null;
+  purchase_id: string;
+  financing_offer_id: string;
+  purchase_name: string | null;
   source_name: string | null;
-  total_leasing_cost: string;
+  total_financing_cost: string;
   total_interest_fees: string;
   savings_vs_cash: string;
   monthly_income_percent: string | null;
@@ -96,7 +99,7 @@ export interface Comparison {
 }
 
 export interface ComparisonPublic {
-  vehicle_name: string;
+  purchase_name: string;
   price_cash: string;
   source_name: string;
   down_payment: string;
@@ -105,7 +108,7 @@ export interface ComparisonPublic {
   months: number;
   monthly_payment: string;
   residual_value: string | null;
-  total_leasing_cost: string;
+  total_financing_cost: string;
   total_interest_fees: string;
   savings_vs_cash: string;
   alerts: Alert[];
@@ -113,9 +116,10 @@ export interface ComparisonPublic {
 }
 
 // Request types
-export interface VehicleCreate {
+export interface PurchaseCreate {
   name: string;
   price_cash: string;
+  category?: PurchaseCategory;
   brand?: string | null;
   model?: string | null;
   year?: number | null;
@@ -123,8 +127,8 @@ export interface VehicleCreate {
   notes?: string | null;
 }
 
-export interface LeasingOfferCreate {
-  vehicle_id: string;
+export interface FinancingOfferCreate {
+  purchase_id: string;
   source_name: string;
   down_payment: string;
   tin: string;
@@ -141,8 +145,8 @@ export interface LeasingOfferCreate {
 }
 
 export interface ComparisonCreate {
-  vehicle_id: string;
-  leasing_offer_id: string;
+  purchase_id: string;
+  financing_offer_id: string;
   user_monthly_income?: string;
   user_available_savings?: string;
 }

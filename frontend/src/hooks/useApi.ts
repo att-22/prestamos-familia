@@ -1,66 +1,66 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { vehiclesApi, leasingOffersApi, comparisonsApi } from '@/services/api';
-import type { VehicleCreate, LeasingOfferCreate, ComparisonCreate } from '@/types/api';
+import { purchasesApi, financingOffersApi, comparisonsApi } from '@/services/api';
+import type { PurchaseCreate, FinancingOfferCreate, ComparisonCreate } from '@/types/api';
 
-// Vehicles
-export function useVehicles() {
-  return useQuery({ queryKey: ['vehicles'], queryFn: () => vehiclesApi.list().then(r => r.data) });
+// Purchases
+export function usePurchases() {
+  return useQuery({ queryKey: ['purchases'], queryFn: () => purchasesApi.list().then(r => r.data) });
 }
 
-export function useVehicle(id: string) {
+export function usePurchase(id: string) {
   return useQuery({
-    queryKey: ['vehicles', id],
-    queryFn: () => vehiclesApi.get(id).then(r => r.data),
+    queryKey: ['purchases', id],
+    queryFn: () => purchasesApi.get(id).then(r => r.data),
     enabled: !!id,
   });
 }
 
-export function useCreateVehicle() {
+export function useCreatePurchase() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: VehicleCreate) => vehiclesApi.create(data).then(r => r.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vehicles'] }),
+    mutationFn: (data: PurchaseCreate) => purchasesApi.create(data).then(r => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['purchases'] }),
   });
 }
 
-export function useUpdateVehicle() {
+export function useUpdatePurchase() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<VehicleCreate> }) =>
-      vehiclesApi.update(id, data).then(r => r.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<PurchaseCreate> }) =>
+      purchasesApi.update(id, data).then(r => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
       // El precio al contado cambia el resultado de las comparativas
       queryClient.invalidateQueries({ queryKey: ['comparisons'] });
     },
   });
 }
 
-export function useDeleteVehicle() {
+export function useDeletePurchase() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => vehiclesApi.delete(id),
+    mutationFn: (id: string) => purchasesApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      queryClient.invalidateQueries({ queryKey: ['leasing-offers'] });
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['financing-offers'] });
       queryClient.invalidateQueries({ queryKey: ['comparisons'] });
     },
   });
 }
 
-// Leasing Offers
-export function useLeasingOffers(vehicleId?: string) {
+// Financing Offers
+export function useFinancingOffers(purchaseId?: string) {
   return useQuery({
-    queryKey: ['leasing-offers', 'list', vehicleId],
-    queryFn: () => leasingOffersApi.list({ vehicle_id: vehicleId }).then(r => r.data),
-    enabled: !!vehicleId,
+    queryKey: ['financing-offers', 'list', purchaseId],
+    queryFn: () => financingOffersApi.list({ purchase_id: purchaseId }).then(r => r.data),
+    enabled: !!purchaseId,
   });
 }
 
-export function useLeasingOffer(id: string) {
+export function useFinancingOffer(id: string) {
   return useQuery({
-    queryKey: ['leasing-offers', 'detail', id],
-    queryFn: () => leasingOffersApi.get(id).then(r => r.data),
+    queryKey: ['financing-offers', 'detail', id],
+    queryFn: () => financingOffersApi.get(id).then(r => r.data),
     enabled: !!id,
   });
 }
@@ -68,32 +68,32 @@ export function useLeasingOffer(id: string) {
 function useInvalidateOffers() {
   const queryClient = useQueryClient();
   return () => {
-    queryClient.invalidateQueries({ queryKey: ['leasing-offers'] });
+    queryClient.invalidateQueries({ queryKey: ['financing-offers'] });
     queryClient.invalidateQueries({ queryKey: ['comparisons'] });
   };
 }
 
-export function useCreateLeasingOffer() {
+export function useCreateFinancingOffer() {
   const invalidate = useInvalidateOffers();
   return useMutation({
-    mutationFn: (data: LeasingOfferCreate) => leasingOffersApi.create(data).then(r => r.data),
+    mutationFn: (data: FinancingOfferCreate) => financingOffersApi.create(data).then(r => r.data),
     onSuccess: invalidate,
   });
 }
 
-export function useUpdateLeasingOffer() {
+export function useUpdateFinancingOffer() {
   const invalidate = useInvalidateOffers();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<LeasingOfferCreate> }) =>
-      leasingOffersApi.update(id, data).then(r => r.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<FinancingOfferCreate> }) =>
+      financingOffersApi.update(id, data).then(r => r.data),
     onSuccess: invalidate,
   });
 }
 
-export function useDeleteLeasingOffer() {
+export function useDeleteFinancingOffer() {
   const invalidate = useInvalidateOffers();
   return useMutation({
-    mutationFn: (id: string) => leasingOffersApi.delete(id),
+    mutationFn: (id: string) => financingOffersApi.delete(id),
     onSuccess: invalidate,
   });
 }
@@ -103,7 +103,7 @@ export function useComparisonPreview(data: ComparisonCreate) {
   return useQuery({
     queryKey: ['comparisons', 'calculate', data],
     queryFn: () => comparisonsApi.calculate(data).then(r => r.data),
-    enabled: !!data.vehicle_id && !!data.leasing_offer_id,
+    enabled: !!data.purchase_id && !!data.financing_offer_id,
     placeholderData: keepPreviousData,
   });
 }

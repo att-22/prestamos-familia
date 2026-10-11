@@ -1,8 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { 
   User,
-  Vehicle, VehicleCreate, 
-  LeasingOffer, LeasingOfferCreate,
+  Purchase, PurchaseCreate, 
+  FinancingOffer, FinancingOfferCreate,
   Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic
 } from '@/types/api';
 
@@ -44,24 +44,24 @@ export const authApi = {
   me: () => api.get<User>('/auth/me'),
 };
 
-// Vehicles
-export const vehiclesApi = {
+// Purchases
+export const purchasesApi = {
   list: (params?: { skip?: number; limit?: number }) => 
-    api.get<Vehicle[]>('/vehicles', { params }),
-  get: (id: string) => api.get<Vehicle>(`/vehicles/${id}`),
-  create: (data: VehicleCreate) => api.post<Vehicle>('/vehicles', data),
-  update: (id: string, data: Partial<VehicleCreate>) => api.patch<Vehicle>(`/vehicles/${id}`, data),
-  delete: (id: string) => api.delete(`/vehicles/${id}`),
+    api.get<Purchase[]>('/purchases', { params }),
+  get: (id: string) => api.get<Purchase>(`/purchases/${id}`),
+  create: (data: PurchaseCreate) => api.post<Purchase>('/purchases', data),
+  update: (id: string, data: Partial<PurchaseCreate>) => api.patch<Purchase>(`/purchases/${id}`, data),
+  delete: (id: string) => api.delete(`/purchases/${id}`),
 };
 
-// Leasing Offers
-export const leasingOffersApi = {
-  list: (params?: { vehicle_id?: string; skip?: number; limit?: number }) => 
-    api.get<LeasingOffer[]>('/leasing-offers', { params }),
-  get: (id: string) => api.get<LeasingOffer>(`/leasing-offers/${id}`),
-  create: (data: LeasingOfferCreate) => api.post<LeasingOffer>('/leasing-offers', data),
-  update: (id: string, data: Partial<LeasingOfferCreate>) => api.patch<LeasingOffer>(`/leasing-offers/${id}`, data),
-  delete: (id: string) => api.delete(`/leasing-offers/${id}`),
+// Financing Offers
+export const financingOffersApi = {
+  list: (params?: { purchase_id?: string; skip?: number; limit?: number }) => 
+    api.get<FinancingOffer[]>('/financing-offers', { params }),
+  get: (id: string) => api.get<FinancingOffer>(`/financing-offers/${id}`),
+  create: (data: FinancingOfferCreate) => api.post<FinancingOffer>('/financing-offers', data),
+  update: (id: string, data: Partial<FinancingOfferCreate>) => api.patch<FinancingOffer>(`/financing-offers/${id}`, data),
+  delete: (id: string) => api.delete(`/financing-offers/${id}`),
 };
 
 // Comparisons

@@ -6,14 +6,14 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ComparisonResult } from '@/components/comparison/ComparisonResult';
 import { ShareButton } from '@/components/comparison/ShareButton';
-import { useVehicle, useLeasingOffer, useComparisonPreview, useCreateComparison } from '@/hooks/useApi';
+import { usePurchase, useFinancingOffer, useComparisonPreview, useCreateComparison } from '@/hooks/useApi';
 import type { Comparison, ComparisonCreate } from '@/types/api';
 
 export function ComparisonPage() {
-  const { vehicleId, offerId } = useParams();
+  const { purchaseId, offerId } = useParams();
   const navigate = useNavigate();
-  const { data: vehicle } = useVehicle(vehicleId!);
-  const { data: offer } = useLeasingOffer(offerId!);
+  const { data: purchase } = usePurchase(purchaseId!);
+  const { data: offer } = useFinancingOffer(offerId!);
 
   // Lo que hay escrito en el formulario vs. lo que ya se ha aplicado al cálculo
   const [income, setIncome] = useState('');
@@ -22,8 +22,8 @@ export function ComparisonPage() {
   const [saved, setSaved] = useState<Comparison | null>(null);
 
   const request: ComparisonCreate = {
-    vehicle_id: vehicleId!,
-    leasing_offer_id: offerId!,
+    purchase_id: purchaseId!,
+    financing_offer_id: offerId!,
     user_monthly_income: context.income,
     user_available_savings: context.savings,
   };
@@ -44,12 +44,12 @@ export function ComparisonPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => navigate(`/vehicles/${vehicleId}`)}>
+        <Button variant="outline" size="sm" onClick={() => navigate(`/purchases/${purchaseId}`)}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Volver
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{vehicle?.name ?? 'Comparativa'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{purchase?.name ?? 'Comparativa'}</h1>
           <p className="text-gray-600">
             Pagar al contado frente a financiar{offer ? ` con ${offer.source_name}` : ''}
           </p>
@@ -95,7 +95,7 @@ export function ComparisonPage() {
       ) : isError || !result ? (
         <Card>
           <CardContent className="py-12 text-center text-danger-600">
-            No se ha podido calcular la comparativa. Comprueba que el vehículo y la oferta siguen existiendo.
+            No se ha podido calcular la comparativa. Comprueba que la compra y la oferta siguen existiendo.
           </CardContent>
         </Card>
       ) : (
@@ -111,7 +111,7 @@ export function ComparisonPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {saved ? (
-                <ShareButton slug={saved.shared_slug} vehicleName={vehicle?.name ?? 'Comparativa'} />
+                <ShareButton slug={saved.shared_slug} purchaseName={purchase?.name ?? 'Comparativa'} />
               ) : (
                 <Button onClick={handleSave} loading={saveMutation.isPending}>
                   <Save className="h-4 w-4 mr-2" />

@@ -7,8 +7,8 @@ from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
 
 if TYPE_CHECKING:
-    from app.models.leasing_offer import LeasingOffer
-    from app.models.vehicle import Vehicle
+    from app.models.financing_offer import FinancingOffer
+    from app.models.purchase import Purchase
 
 
 class Comparison(SQLModel, table=True):
@@ -21,16 +21,16 @@ class Comparison(SQLModel, table=True):
     user_id: uuid.UUID = Field(
         sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
     )
-    vehicle_id: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False, index=True),
+    purchase_id: uuid.UUID = Field(
+        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("purchases.id", ondelete="CASCADE"), nullable=False, index=True),
     )
-    leasing_offer_id: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("leasing_offers.id", ondelete="CASCADE"), nullable=False, index=True),
+    financing_offer_id: uuid.UUID = Field(
+        sa_column=Column(pg.UUID(as_uuid=True), ForeignKey("financing_offers.id", ondelete="CASCADE"), nullable=False, index=True),
     )
 
-    total_leasing_cost: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Total pagado en leasing (entradas + cuotas + comisiones + seguros)")
+    total_financing_cost: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Total pagado financiando (entrada + cuotas + cuota final + comisiones + seguros)")
     total_interest_fees: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Total intereses + comisiones + seguros")
-    savings_vs_cash: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Precio contado - coste leasing (negativo = leasing más caro)")
+    savings_vs_cash: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Precio contado - coste financiado (negativo = financiar es más caro)")
     monthly_income_percent: Optional[Decimal] = Field(default=None, sa_column=Column(pg.NUMERIC(5, 2), nullable=True), description="% de ingresos que supone la cuota")
 
     alerts_json: list[dict] = Field(
@@ -54,13 +54,13 @@ class Comparison(SQLModel, table=True):
         sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),
     )
 
-    vehicle: "Vehicle" = Relationship(back_populates="comparisons")
-    leasing_offer: "LeasingOffer" = Relationship(back_populates="comparisons")
+    purchase: "Purchase" = Relationship(back_populates="comparisons")
+    financing_offer: "FinancingOffer" = Relationship(back_populates="comparisons")
 
     @property
-    def vehicle_name(self) -> Optional[str]:
-        return self.vehicle.name if self.vehicle else None
+    def purchase_name(self) -> Optional[str]:
+        return self.purchase.name if self.purchase else None
 
     @property
     def source_name(self) -> Optional[str]:
-        return self.leasing_offer.source_name if self.leasing_offer else None
+        return self.financing_offer.source_name if self.financing_offer else None

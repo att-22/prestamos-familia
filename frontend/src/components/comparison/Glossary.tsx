@@ -19,7 +19,7 @@ const terms = [
   },
   {
     term: 'Importe financiado',
-    definition: 'Lo que realmente te prestan: el precio del coche menos la entrada. Sobre esta cantidad se calculan los intereses.',
+    definition: 'Lo que realmente te prestan: el precio al contado menos la entrada. Sobre esta cantidad se calculan los intereses.',
   },
   {
     term: 'Cuota mensual',
@@ -29,7 +29,7 @@ const terms = [
   {
     term: 'Plazo',
     definition:
-      'Número de meses durante los que pagas. A más plazo, cuota más baja pero más intereses totales. Por encima de 6 años el coche suele valer menos de lo que aún debes.',
+      'Número de meses durante los que pagas. A más plazo, cuota más baja pero más intereses totales. En plazos muy largos lo que compraste puede valer menos de lo que aún debes.',
   },
   {
     term: 'Comisión de apertura',
@@ -49,12 +49,12 @@ const terms = [
   {
     term: 'Valor residual o cuota final',
     definition:
-      'En algunas ofertas (leasing, "multiopción") las cuotas son bajas porque al final queda un pago grande pendiente. Si quieres quedarte el coche tendrás que pagarlo o refinanciarlo.',
+      'En algunas ofertas (sobre todo de coches, tipo "multiopción") las cuotas son bajas porque al final queda un pago grande pendiente. Para que sea tuyo tendrás que pagarlo o refinanciarlo.',
   },
   {
     term: 'Leasing y renting',
     definition:
-      'En el leasing pagas por usar el coche con opción a comprarlo al final. En el renting pagas un alquiler con servicios incluidos y el coche nunca es tuyo.',
+      'En el leasing pagas por usar algo (normalmente un vehículo) con opción a comprarlo al final. En el renting pagas un alquiler con servicios incluidos y nunca es tuyo.',
   },
   {
     term: 'Ratio de endeudamiento',

@@ -7,11 +7,11 @@ from sqlmodel import Session, col, select
 
 from app.core.database import get_session
 from app.models.comparison import Comparison
-from app.models.vehicle import Vehicle
-from app.models.leasing_offer import LeasingOffer
+from app.models.purchase import Purchase
+from app.models.financing_offer import FinancingOffer
 from app.schemas.comparison import ComparisonCreate, ComparisonRead, ComparisonResult, ComparisonPublic
 from app.services.calculations import (
-    calculate_leasing_comparison,
+    calculate_financing_comparison,
     resolve_residual_value,
     CalculationInput,
     CalculationResult,
@@ -26,25 +26,25 @@ def generate_slug() -> str:
     return secrets.token_urlsafe(8)[:10]
 
 
-def _load_vehicle_and_offer(
+def _load_purchase_and_offer(
     comparison_in: ComparisonCreate, user_id: UUID, session: Session
-) -> tuple[Vehicle, LeasingOffer]:
-    vehicle = session.get(Vehicle, comparison_in.vehicle_id)
-    if not vehicle or vehicle.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Vehículo no encontrado")
+) -> tuple[Purchase, FinancingOffer]:
+    purchase = session.get(Purchase, comparison_in.purchase_id)
+    if not purchase or purchase.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Compra no encontrada")
 
-    offer = session.get(LeasingOffer, comparison_in.leasing_offer_id)
-    if not offer or offer.vehicle_id != vehicle.id:
+    offer = session.get(FinancingOffer, comparison_in.financing_offer_id)
+    if not offer or offer.purchase_id != purchase.id:
         raise HTTPException(status_code=404, detail="Oferta no encontrada")
 
-    return vehicle, offer
+    return purchase, offer
 
 
 def _compute(
-    vehicle: Vehicle, offer: LeasingOffer, comparison_in: ComparisonCreate
+    purchase: Purchase, offer: FinancingOffer, comparison_in: ComparisonCreate
 ) -> tuple[CalculationResult, list[dict]]:
     calc_input = CalculationInput(
-        price_cash=vehicle.price_cash,
+        price_cash=purchase.price_cash,
         down_payment=offer.down_payment,
         tin=offer.tin,
         tae=offer.tae,
@@ -58,14 +58,14 @@ def _compute(
         residual_value_percent=offer.residual_value_percent,
     )
 
-    result = calculate_leasing_comparison(
+    result = calculate_financing_comparison(
         calc_input,
         user_monthly_income=comparison_in.user_monthly_income,
         user_available_savings=comparison_in.user_available_savings,
     )
 
     alerts = generate_alerts(
-        price_cash=vehicle.price_cash,
+        price_cash=purchase.price_cash,
         down_payment=offer.down_payment,
         tin=offer.tin,
         tae=offer.tae,
@@ -93,8 +93,8 @@ async def calculate_comparison(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
 ):
-    vehicle, offer = _load_vehicle_and_offer(comparison_in, user_id, session)
-    result, alerts_json = _compute(vehicle, offer, comparison_in)
+    purchase, offer = _load_purchase_and_offer(comparison_in, user_id, session)
+    result, alerts_json = _compute(purchase, offer, comparison_in)
     return ComparisonResult(**asdict(result), alerts=alerts_json)
 
 
@@ -104,14 +104,14 @@ async def create_comparison(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
 ):
-    vehicle, offer = _load_vehicle_and_offer(comparison_in, user_id, session)
-    result, alerts_json = _compute(vehicle, offer, comparison_in)
+    purchase, offer = _load_purchase_and_offer(comparison_in, user_id, session)
+    result, alerts_json = _compute(purchase, offer, comparison_in)
 
     comparison = Comparison(
         user_id=user_id,
-        vehicle_id=vehicle.id,
-        leasing_offer_id=offer.id,
-        total_leasing_cost=result.total_leasing_cost,
+        purchase_id=purchase.id,
+        financing_offer_id=offer.id,
+        total_financing_cost=result.total_financing_cost,
         total_interest_fees=result.total_interest_fees,
         savings_vs_cash=result.savings_vs_cash,
         monthly_income_percent=result.monthly_income_percent,
@@ -169,17 +169,17 @@ async def get_public_comparison(
     if not comparison:
         raise HTTPException(status_code=404, detail="Comparación no encontrada o no pública")
     
-    vehicle = session.get(Vehicle, comparison.vehicle_id)
-    offer = session.get(LeasingOffer, comparison.leasing_offer_id)
+    purchase = session.get(Purchase, comparison.purchase_id)
+    offer = session.get(FinancingOffer, comparison.financing_offer_id)
     
-    if not vehicle or not offer:
+    if not purchase or not offer:
         raise HTTPException(status_code=404, detail="Datos incompletos")
     
-    residual_value = resolve_residual_value(vehicle.price_cash, offer.residual_value, offer.residual_value_percent)
+    residual_value = resolve_residual_value(purchase.price_cash, offer.residual_value, offer.residual_value_percent)
 
     return ComparisonPublic(
-        vehicle_name=vehicle.name,
-        price_cash=vehicle.price_cash,
+        purchase_name=purchase.name,
+        price_cash=purchase.price_cash,
         source_name=offer.source_name,
         down_payment=offer.down_payment,
         tin=offer.tin,
@@ -187,7 +187,7 @@ async def get_public_comparison(
         months=offer.months,
         monthly_payment=offer.monthly_payment,
         residual_value=residual_value if residual_value > 0 else None,
-        total_leasing_cost=comparison.total_leasing_cost,
+        total_financing_cost=comparison.total_financing_cost,
         total_interest_fees=comparison.total_interest_fees,
         savings_vs_cash=comparison.savings_vs_cash,
         alerts=comparison.alerts_json,

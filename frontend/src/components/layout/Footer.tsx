@@ -9,14 +9,14 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Préstamos Familia</h3>
             <p className="text-sm text-gray-600">
-              Herramienta para entender el coste real de financiar un coche.
+              Herramienta para entender el coste real de financiar una compra.
               Hecha con cariño para que nadie firme sin entender lo que paga.
             </p>
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Enlaces</h3>
             <nav className="space-y-1 text-sm">
-              <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 block">Mis vehículos</Link>
+              <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 block">Mis compras</Link>
               <Link to="/comparisons" className="text-gray-600 hover:text-gray-900 block">Mis comparativas</Link>
               <Link to="/glossary" className="text-gray-600 hover:text-gray-900 block">Glosario financiero</Link>
             </nav>

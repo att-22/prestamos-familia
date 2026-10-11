@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { InfoTooltip } from '@/components/ui/Tooltip';
 
-const leasingSchema = z.object({
+const offerSchema = z.object({
   source_name: z.string().min(1, 'Nombre requerido'),
   down_payment: z.string().min(1, 'Entrada requerida').refine(v => parseFloat(v) >= 0, 'Debe ser 0 o mayor'),
   tin: z.string().min(1, 'TIN requerido').refine(v => parseFloat(v) >= 0 && parseFloat(v) <= 100, 'TIN entre 0-100%'),
@@ -22,19 +22,19 @@ const leasingSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type LeasingOfferFormData = z.infer<typeof leasingSchema>;
+export type FinancingOfferFormData = z.infer<typeof offerSchema>;
 
-interface LeasingOfferFormProps {
-  initialData?: Partial<LeasingOfferFormData>;
-  onSubmit: (data: LeasingOfferFormData) => Promise<void>;
+interface FinancingOfferFormProps {
+  initialData?: Partial<FinancingOfferFormData>;
+  onSubmit: (data: FinancingOfferFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
   submitLabel?: string;
 }
 
-export function LeasingOfferForm({ initialData, onSubmit, onCancel, isLoading, submitLabel = 'Guardar oferta' }: LeasingOfferFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<LeasingOfferFormData>({
-    resolver: zodResolver(leasingSchema),
+export function FinancingOfferForm({ initialData, onSubmit, onCancel, isLoading, submitLabel = 'Guardar oferta' }: FinancingOfferFormProps) {
+  const { register, handleSubmit, formState: { errors } } = useForm<FinancingOfferFormData>({
+    resolver: zodResolver(offerSchema),
     defaultValues: {
       source_name: '',
       down_payment: '0',
@@ -56,14 +56,14 @@ export function LeasingOfferForm({ initialData, onSubmit, onCancel, isLoading, s
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-lg font-semibold text-gray-900">Oferta de financiaci&oacute;n / leasing</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Oferta de financiaci&oacute;n</h2>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Input
             {...register('source_name')}
-            label="Entidad / Concesionario *"
-            placeholder="Ej: Concesionario Pepe, Banco Santander"
+            label="Entidad que financia *"
+            placeholder="Ej: tu banco, la financiera de la tienda..."
             error={errors.source_name?.message}
           />
 
@@ -169,7 +169,7 @@ export function LeasingOfferForm({ initialData, onSubmit, onCancel, isLoading, s
               step="0.01"
               min="0"
               placeholder="Solo si queda un pago al final"
-              helperText="Lo que hay que pagar al acabar las cuotas para quedarte el coche."
+              helperText="Lo que hay que pagar al acabar las cuotas para que sea tuyo."
               error={errors.residual_value?.message}
             />
             <Input
