@@ -1,191 +1,174 @@
-# Préstamos Familia - Comparador de Financiación vs Contado
+# Préstamos Familia
 
-Herramienta para ayudar a personas sin conocimientos financieros a analizar préstamos y leasing de vehículos, comparando pago al contado vs financiación.
+[![Backend CI](https://github.com/att-22/prestamos-familia/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/att-22/prestamos-familia/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/att-22/prestamos-familia/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/att-22/prestamos-familia/actions/workflows/frontend-ci.yml)
 
-## Stack Tecnológico
+A web app that shows what financing a car really costs compared with paying cash.
 
-- **Backend**: FastAPI + SQLModel + PostgreSQL + Supabase Auth
-- **Frontend**: React 18 + Vite + Tailwind CSS + TanStack Query + React Hook Form + Zod
-- **Deploy**: Vercel (Frontend) + Railway/Render (Backend)
-- **Auth**: Magic Links via Supabase (sin passwords)
+Car dealers sell a monthly payment. This app turns an offer into the numbers
+that matter — total paid, real APR, and how much more it costs than cash — and
+explains them in plain language for people with no financial background. The UI
+is in Spanish because that is who it was built for.
 
-## Estructura del Monorepo
+![Analysis of a financing offer with a balloon payment](docs/screenshot.png)
+
+## What it does
+
+- **Track vehicles and offers.** Save the cars you are considering and every
+  financing offer you get for each one.
+- **Cash vs. financing.** Total cost of the offer (down payment, instalments,
+  balloon payment, mandatory insurance and fees) against the cash price.
+- **Effective APR.** Recomputes the APR (TAE) from the actual cash flows, so it
+  can be checked against the rate the lender declares.
+- **Plain-language alerts.** Around twenty rules flag things worth questioning
+  before signing: a high APR, a gap between nominal rate and APR, opening or
+  early-repayment fees, tied insurance, long terms, and a large final payment.
+- **Personal affordability.** Optionally enter monthly income and savings to see
+  the debt-to-income ratio and what is left after the down payment.
+- **Shareable results.** Saved comparisons get a public link that shows the
+  analysis without the income and savings figures.
+- **Glossary.** Searchable definitions of the terms a lender will use.
+
+## How the numbers work
+
+| Figure | Formula |
+|--------|---------|
+| Financed amount | `cash price − down payment` |
+| Fees | `opening fee + financed amount × opening fee %` |
+| Insurance | `yearly insurance × months / 12` |
+| Total financing cost | `down payment + instalments + balloon payment + insurance + fees` |
+| Extra cost vs. cash | `total financing cost − cash price` |
+| Effective APR | Monthly rate `r` that solves `financed − fees = Σ instalment/(1+r)ⁿ + balloon/(1+r)ᴺ`, annualised as `(1+r)¹² − 1` |
+
+The balloon payment (residual value) is counted as a cost because the comparison
+is about *owning* the car: it is what must be paid at the end to keep it. All
+money is handled as `Decimal` end to end, never as floats.
+
+The logic lives in [`backend/app/services`](backend/app/services) and is covered
+by unit tests.
+
+## Tech stack
+
+| Layer | Tools |
+|-------|-------|
+| Backend | FastAPI, SQLModel, PostgreSQL 16, Alembic, JWT auth |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form + Zod |
+| Quality | pytest, ruff, mypy · Vitest, ESLint, `tsc` |
+| Tooling | Docker Compose, GitHub Actions |
+
+## Project structure
 
 ```
-prestamos-familia/
-├── backend/                 # FastAPI Application
-│   ├── app/
-│   │   ├── api/            # Endpoints (routes)
-│   │   ├── core/           # Config, security, database
-│   │   ├── models/         # SQLModel tables
-│   │   ├── schemas/        # Pydantic schemas (request/response)
-│   │   ├── services/       # Business logic (calculations, alerts)
-│   │   └── main.py         # App entry point
-│   ├── tests/
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── alembic/            # Migrations
-├── frontend/               # React + Vite Application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── pages/          # Page components (routes)
-│   │   ├── services/       # API calls (TanStack Query)
-│   │   ├── types/          # TypeScript types (shared with backend)
-│   │   └── utils/          # Helpers, formatters
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   └── Dockerfile
-├── shared/                 # Shared types/schemas
-│   └── schemas.ts          # Zod schemas shared via copy or git submodule
-├── docker-compose.yml      # Local development (PostgreSQL + Backend + Frontend)
-├── .github/workflows/      # CI/CD pipelines
-└── README.md
+backend/
+  app/
+    api/routes/     HTTP endpoints (auth, vehicles, leasing offers, comparisons)
+    core/           settings, database session, JWT helpers
+    models/         SQLModel tables
+    schemas/        request/response models
+    services/       cost calculation and alert rules (pure functions)
+  alembic/          database migrations
+  tests/            unit tests for the services, API tests against PostgreSQL
+frontend/
+  src/
+    components/     UI primitives, forms, comparison views, layout
+    hooks/          auth context and TanStack Query hooks
+    pages/          one component per route
+    services/       typed API client
+.github/workflows/  CI pipelines
+docker-compose.yml  local development stack
 ```
 
-## Desarrollo Local
+## Running locally
 
-### Prerrequisitos
-- Docker & Docker Compose
-- Node.js 20+ (para frontend local sin Docker)
-- Python 3.11+ (para backend local sin Docker)
-
-### Con Docker (recomendado)
-```bash
-docker-compose up -d
-# Frontend: http://localhost:5173
-# Backend API: http://localhost:8000
-# API Docs: http://localhost:8000/docs
-# PostgreSQL: localhost:5432
-```
-
-### Sin Docker (desarrollo nativo)
-
-**Backend:**
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env  # Configurar variables
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-cp .env.example .env  # Configurar VITE_API_URL
-npm run dev
-```
-
-## Variables de Entorno
-
-### Backend (`backend/.env`)
-```env
-DATABASE_URL=postgresql://user:pass@localhost:5432/prestamos
-SUPABASE_JWT_SECRET=your-supabase-jwt-secret
-SUPABASE_URL=https://your-project.supabase.co
-ENVIRONMENT=development
-CORS_ORIGINS=http://localhost:5173
-```
-
-### Frontend (`frontend/.env`)
-```env
-VITE_API_URL=http://localhost:8000
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-## Deploy
-
-### Backend (Railway/Render)
-1. Conectar repo GitHub
-2. Configurar variables de entorno
-3. Build command: `pip install -r requirements.txt && alembic upgrade head`
-4. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-
-### Frontend (Vercel)
-1. Importar repo GitHub
-2. Root Directory: `frontend`
-3. Build Command: `npm run build`
-4. Output Directory: `dist`
-5. Configurar `VITE_API_URL` en variables de entorno
-
-## Tests y calidad
+Requires Docker.
 
 ```bash
-# Backend (dentro del contenedor; los tests de API se deshacen con un rollback)
+docker compose up -d --build
+```
+
+| Service | URL |
+|---------|-----|
+| App | http://localhost:5173 |
+| API | http://localhost:8000 |
+| API docs (Swagger) | http://localhost:8000/docs |
+
+Migrations run automatically when the backend container starts. In development
+the login screen has shortcut buttons that sign in as demo users, so no account
+setup is needed.
+
+## Tests and checks
+
+```bash
+# Backend
 docker compose exec backend pytest
 docker compose exec backend ruff check app/ tests/
 docker compose exec backend mypy app/
 
 # Frontend
 cd frontend
+npm ci
 npm run lint && npx tsc --noEmit && npm run test -- --run && npm run build
 ```
 
-Tras cambiar un modelo, genera la migración y revísala antes de commitear:
+The API tests run against a real PostgreSQL database inside a transaction that
+is rolled back after each test, so they leave no data behind.
+
+After changing a model, generate a migration and review it before committing:
 
 ```bash
-docker compose exec backend alembic revision --autogenerate -m "descripcion"
+docker compose exec backend alembic revision --autogenerate -m "describe the change"
 docker compose exec backend alembic upgrade head
 ```
 
-## CI/CD (GitHub Actions)
+## CI/CD
 
-Hay un workflow por mitad del monorepo en `.github/workflows/`. Cada uno solo se
-ejecuta si cambian archivos de su carpeta (`paths:`), en cada push a `main` y en
-cada pull request contra `main`. También se pueden lanzar a mano desde la pestaña
-**Actions** (`workflow_dispatch`).
+Each half of the monorepo has its own GitHub Actions workflow, triggered only
+when files under its directory change, on pushes to `main` and on pull requests.
 
-| Workflow | Job | Qué hace |
-|----------|-----|----------|
-| `backend-ci.yml` | `test` | Levanta PostgreSQL como servicio, instala dependencias, `ruff`, `mypy`, aplica migraciones y ejecuta `pytest` con cobertura |
-| `backend-ci.yml` | `docker` | Construye la imagen de producción (`backend/Dockerfile`) para comprobar que no se rompe |
-| `frontend-ci.yml` | `test` | `npm ci`, ESLint, `tsc`, Vitest y build de producción |
-| `frontend-ci.yml` | `deploy` | Despliega en Vercel: preview en los PR, producción en `main`. Se omite si faltan los secrets |
+| Workflow | Job | What it does |
+|----------|-----|--------------|
+| `backend-ci.yml` | `test` | Starts PostgreSQL as a service container, then runs ruff, mypy, the migrations and pytest with coverage |
+| `backend-ci.yml` | `docker` | Builds the production image to make sure it still builds |
+| `frontend-ci.yml` | `test` | ESLint, type check, Vitest and a production build |
+| `frontend-ci.yml` | `deploy` | Deploys to Vercel — a preview for pull requests, production on `main` |
 
-### Flujo de trabajo recomendado
+The deploy job is skipped until the `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
+`VERCEL_PROJECT_ID` repository secrets are set.
 
-```bash
-git switch -c mi-cambio          # 1. rama nueva
-# ...editar, commit...
-git push -u origin mi-cambio     # 2. subir la rama
-gh pr create --fill              # 3. abrir PR -> se lanza el CI
-gh pr checks --watch             # 4. ver el resultado
-gh pr merge --squash             # 5. fusionar -> CI en main (+ deploy)
-```
+## Configuration
 
-### Activar el despliegue del frontend (CD)
+Docker Compose provides working defaults for local development. For other
+environments:
 
-1. Crea el proyecto en Vercel: `cd frontend && npx vercel link` (genera `.vercel/project.json` con `orgId` y `projectId`).
-2. Crea un token en <https://vercel.com/account/tokens>.
-3. Guarda los tres valores como secrets del repo:
-   ```bash
-   gh secret set VERCEL_TOKEN
-   gh secret set VERCEL_ORG_ID
-   gh secret set VERCEL_PROJECT_ID
-   ```
-4. En Vercel, define `VITE_API_URL` con la URL pública del backend.
+**Backend**
 
-El backend se despliega conectando el repo desde el panel de Railway/Render
-(ver sección Deploy); ellos redepliegan en cada push a `main`.
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SUPABASE_JWT_SECRET` | Secret used to sign and verify JWTs |
+| `SUPABASE_URL` | Supabase project URL |
+| `ENVIRONMENT` | `development`, `test` or `production` |
+| `CORS_ORIGINS` | Comma-separated list of allowed origins |
 
-> **Antes de desplegar en producción:** el login actual usa `/auth/dev-token`,
-> que está desactivado cuando `ENVIRONMENT=production`. Hace falta implementar
-> el login real (magic link de Supabase) para que la app sea usable desplegada.
+**Frontend**
 
-### Ejercicios para practicar
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Base URL of the backend API |
 
-- Rompe un test a propósito en una rama, abre un PR y mira cómo falla el check.
-- Protege `main` (Settings → Branches) para exigir que el CI pase antes de fusionar.
-- Añade un job que publique la imagen del backend en GHCR (`docker/build-push-action`).
-- Añade Dependabot (`.github/dependabot.yml`) para actualizar dependencias con PRs automáticos.
+## Status and roadmap
 
-## Licencia
+The app is fully usable locally. It is not deployed yet because sign-in currently
+relies on a development-only endpoint (`POST /auth/dev-token`), which is disabled
+when `ENVIRONMENT=production`.
 
-MIT - Uso familiar y personal.
+Planned next:
+
+- Production sign-in with email magic links
+- Side-by-side comparison of several offers for the same vehicle
+- "What if" sliders to explore a larger down payment or a shorter term
+- Including mandatory insurance in the effective APR
+
+---
+
+This tool is not financial advice.
