@@ -1,0 +1,53 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import get_settings
+from app.core.database import init_db
+from app.api.routes import health, auth, vehicles, leasing_offers, comparisons
+
+settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    init_db()
+    yield
+    # Shutdown (cleanup if needed)
+
+
+app = FastAPI(
+    title="Préstamos Familia API",
+    description="API para comparar financiación vs pago al contado de vehículos",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routers
+app.include_router(health.router)
+app.include_router(auth.router)
+app.include_router(vehicles.router)
+app.include_router(leasing_offers.router)
+app.include_router(comparisons.router)
+
+
+@app.get("/")
+async def root():
+    return {
+        "name": "Préstamos Familia API",
+        "version": "0.1.0",
+        "docs": "/docs",
+        "health": "/healthz",
+    }
