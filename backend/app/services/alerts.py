@@ -18,6 +18,19 @@ class Alert:
     code: str
 
 
+# Alertas calculadas con los ingresos o ahorros del usuario. No deben salir
+# en el enlace compartido: su texto permite deducir esos datos.
+PERSONAL_ALERT_CODES = frozenset({
+    "DEBT_RATIO_CRITICAL",
+    "DEBT_RATIO_HIGH",
+    "DEBT_RATIO_OK",
+    "DEBT_RATIO_LOW",
+    "DOWN_PAYMENT_EXCEEDS_SAVINGS",
+    "LOW_EMERGENCY_FUND",
+    "HEALTHY_EMERGENCY_FUND",
+})
+
+
 def generate_alerts(
     price_cash: Decimal,
     down_payment: Decimal,

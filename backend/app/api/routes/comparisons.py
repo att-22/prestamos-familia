@@ -15,7 +15,7 @@ from app.services.calculations import (
     CalculationInput,
     CalculationResult,
 )
-from app.services.alerts import generate_alerts
+from app.services.alerts import generate_alerts, PERSONAL_ALERT_CODES
 from app.api.deps import get_current_user_id
 
 router = APIRouter(prefix="/comparisons", tags=["comparisons"])
@@ -189,7 +189,7 @@ async def get_public_comparison(
         total_financing_cost=comparison.total_financing_cost,
         total_interest_fees=comparison.total_interest_fees,
         savings_vs_cash=comparison.savings_vs_cash,
-        alerts=comparison.alerts_json,
+        alerts=[a for a in comparison.alerts_json if a["code"] not in PERSONAL_ALERT_CODES],
         created_at=comparison.created_at,
     )
 

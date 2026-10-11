@@ -179,3 +179,24 @@ def test_saved_comparison_is_a_snapshot(client, auth_headers):
     assert fresh_public["purchase_name"] == "Otro nombre"
     assert fresh_public["tae"] == "12.50"
     assert fresh_public["residual_value"] == "4000.00"
+
+
+def test_public_link_hides_alerts_based_on_income_and_savings(client, auth_headers):
+    purchase, offer = create_purchase_and_offer(client, auth_headers)
+    body = {
+        "purchase_id": purchase["id"],
+        "financing_offer_id": offer["id"],
+        "user_monthly_income": "1100",
+        "user_available_savings": "6000",
+    }
+
+    saved = client.post("/comparisons", json=body, headers=auth_headers).json()
+    owner_codes = {a["code"] for a in saved["alerts_json"]}
+    assert {"DEBT_RATIO_CRITICAL", "LOW_EMERGENCY_FUND"} <= owner_codes
+
+    public = client.get(f"/comparisons/public/{saved['shared_slug']}").json()
+    public_codes = {a["code"] for a in public["alerts"]}
+    assert "FINANCING_MORE_EXPENSIVE" in public_codes
+    assert not public_codes & {"DEBT_RATIO_CRITICAL", "LOW_EMERGENCY_FUND"}
+    # Ni los ingresos ni lo que queda de ahorros se pueden leer en la respuesta
+    assert "35.57" not in str(public) and "1000.00" not in str(public)

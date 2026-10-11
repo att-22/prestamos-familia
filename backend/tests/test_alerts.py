@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from app.services.alerts import AlertType, generate_alerts
+from app.services.alerts import PERSONAL_ALERT_CODES, AlertType, generate_alerts
 
 
 def alerts_for(**overrides):
@@ -90,3 +90,15 @@ def test_balloon_payment_alert():
     big = alerts_for(residual_value=Decimal("10000"))["BALLOON_PAYMENT"]
     assert big.type == AlertType.WARNING
     assert "10000" in big.message and "40.0%" in big.message
+
+
+def test_personal_alert_codes_cover_every_alert_that_needs_user_data():
+    without_user_data = set(alerts_for().keys())
+    for income in ("10", "25", "32", "40"):
+        for remaining in ("-1000", "1000", "8000"):
+            with_user_data = alerts_for(
+                monthly_income_percent=Decimal(income),
+                savings_after_down_payment=Decimal(remaining),
+                user_available_savings=Decimal("9000"),
+            )
+            assert set(with_user_data.keys()) - without_user_data <= PERSONAL_ALERT_CODES
