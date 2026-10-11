@@ -39,6 +39,11 @@ class Comparison(SQLModel, table=True):
         description="Lista de alertas: [{type: 'warning'|'info'|'success', 'message': '...', 'code': '...'}]",
     )
 
+    # Foto de la compra y la oferta con las que se calcularon los totales de arriba.
+    # El enlace compartido lee de aquí, no de las tablas, para que editar la oferta
+    # después no deje los datos incoherentes con los totales.
+    snapshot: dict = Field(default_factory=dict, sa_column=Column(pg.JSONB, nullable=False))
+
     shared_slug: str = Field(sa_column=Column(pg.VARCHAR(50), unique=True, index=True, nullable=False))
     is_public: bool = Field(default=True, sa_column=Column(pg.BOOLEAN, nullable=False, default=True))
 
@@ -59,8 +64,8 @@ class Comparison(SQLModel, table=True):
 
     @property
     def purchase_name(self) -> Optional[str]:
-        return self.purchase.name if self.purchase else None
+        return self.snapshot.get("purchase_name")
 
     @property
     def source_name(self) -> Optional[str]:
-        return self.financing_offer.source_name if self.financing_offer else None
+        return self.snapshot.get("source_name")

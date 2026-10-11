@@ -12,7 +12,6 @@ from app.models.financing_offer import FinancingOffer
 from app.schemas.comparison import ComparisonCreate, ComparisonRead, ComparisonResult, ComparisonPublic
 from app.services.calculations import (
     calculate_financing_comparison,
-    resolve_residual_value,
     CalculationInput,
     CalculationResult,
 )
@@ -87,6 +86,21 @@ def _compute(
     return result, alerts_json
 
 
+def _snapshot(purchase: Purchase, offer: FinancingOffer, result: CalculationResult) -> dict:
+    """Datos de entrada del cálculo, tal como eran al guardar (JSON: los decimales van como texto)."""
+    return {
+        "purchase_name": purchase.name,
+        "price_cash": str(result.price_cash),
+        "source_name": offer.source_name,
+        "down_payment": str(result.down_payment),
+        "tin": str(result.tin),
+        "tae": str(result.tae),
+        "months": result.months,
+        "monthly_payment": str(result.monthly_payment),
+        "residual_value": str(result.residual_value) if result.residual_value is not None else None,
+    }
+
+
 @router.post("/calculate", response_model=ComparisonResult)
 async def calculate_comparison(
     comparison_in: ComparisonCreate,
@@ -116,6 +130,7 @@ async def create_comparison(
         savings_vs_cash=result.savings_vs_cash,
         monthly_income_percent=result.monthly_income_percent,
         alerts_json=alerts_json,
+        snapshot=_snapshot(purchase, offer, result),
         shared_slug=generate_slug(),
         user_monthly_income=comparison_in.user_monthly_income,
         user_available_savings=comparison_in.user_available_savings,
@@ -169,24 +184,8 @@ async def get_public_comparison(
     if not comparison:
         raise HTTPException(status_code=404, detail="Comparación no encontrada o no pública")
     
-    purchase = session.get(Purchase, comparison.purchase_id)
-    offer = session.get(FinancingOffer, comparison.financing_offer_id)
-    
-    if not purchase or not offer:
-        raise HTTPException(status_code=404, detail="Datos incompletos")
-    
-    residual_value = resolve_residual_value(purchase.price_cash, offer.residual_value, offer.residual_value_percent)
-
     return ComparisonPublic(
-        purchase_name=purchase.name,
-        price_cash=purchase.price_cash,
-        source_name=offer.source_name,
-        down_payment=offer.down_payment,
-        tin=offer.tin,
-        tae=offer.tae,
-        months=offer.months,
-        monthly_payment=offer.monthly_payment,
-        residual_value=residual_value if residual_value > 0 else None,
+        **comparison.snapshot,
         total_financing_cost=comparison.total_financing_cost,
         total_interest_fees=comparison.total_interest_fees,
         savings_vs_cash=comparison.savings_vs_cash,

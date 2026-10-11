@@ -143,3 +143,39 @@ def test_purchase_category(client, auth_headers):
 
     invalid = client.post("/purchases", json={"name": "X", "price_cash": "100", "category": "yacht"}, headers=auth_headers)
     assert invalid.status_code == 422
+
+
+def test_saved_comparison_is_a_snapshot(client, auth_headers):
+    purchase, offer = create_purchase_and_offer(client, auth_headers)
+    body = {"purchase_id": purchase["id"], "financing_offer_id": offer["id"]}
+    saved = client.post("/comparisons", json=body, headers=auth_headers).json()
+    before = client.get(f"/comparisons/public/{saved['shared_slug']}").json()
+
+    # Se editan la compra y la oferta después de guardar la comparativa
+    client.patch(
+        f"/purchases/{purchase['id']}",
+        json={"name": "Otro nombre", "price_cash": "30000"},
+        headers=auth_headers,
+    )
+    client.patch(
+        f"/financing-offers/{offer['id']}",
+        json={"source_name": "Otro banco", "tae": "12.5", "monthly_payment": "500", "months": 72, "residual_value": "4000"},
+        headers=auth_headers,
+    )
+
+    # El enlace compartido sigue mostrando la oferta tal como era, coherente con sus totales
+    after = client.get(f"/comparisons/public/{saved['shared_slug']}").json()
+    assert after == before
+    assert after["source_name"] == "Banco Test"
+    assert after["monthly_payment"] == "391.32"
+
+    listed = client.get("/comparisons", headers=auth_headers).json()[0]
+    assert listed["purchase_name"] == "Toyota Corolla"
+    assert listed["source_name"] == "Banco Test"
+
+    # Una comparativa nueva sí refleja los cambios
+    fresh = client.post("/comparisons", json=body, headers=auth_headers).json()
+    fresh_public = client.get(f"/comparisons/public/{fresh['shared_slug']}").json()
+    assert fresh_public["purchase_name"] == "Otro nombre"
+    assert fresh_public["tae"] == "12.50"
+    assert fresh_public["residual_value"] == "4000.00"
