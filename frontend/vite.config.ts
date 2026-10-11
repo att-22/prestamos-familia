@@ -12,6 +12,8 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // En Docker sobre Windows los eventos de archivo no cruzan el bind mount
+    watch: { usePolling: true, interval: 300 },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
