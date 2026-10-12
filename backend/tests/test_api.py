@@ -258,3 +258,44 @@ def test_offer_ranking_is_private(client, auth_headers):
 
     assert response.status_code == 404
     assert client.get(f"/purchases/{purchase['id']}/offer-ranking").status_code == 401
+
+
+def test_calculation_includes_the_amortization_schedule(client, auth_headers):
+    purchase, offer = create_purchase_and_offer(client, auth_headers)
+
+    response = client.post(
+        "/comparisons/calculate",
+        json={"purchase_id": purchase["id"], "financing_offer_id": offer["id"]},
+        headers=auth_headers,
+    )
+
+    amortization = response.json()["amortization"]
+    assert amortization["annual_rate"] == "6.50"
+    assert len(amortization["rows"]) == 60
+    assert amortization["rows"][0] == {
+        "month": 1, "payment": "391.32", "interest": "108.33", "principal": "282.99", "balance": "19717.01",
+    }
+    assert amortization["rows"][-1]["balance"] == "0.00"
+
+
+def test_simulating_other_conditions_for_an_offer(client, auth_headers):
+    purchase, offer = create_purchase_and_offer(client, auth_headers)
+    body = {"purchase_id": purchase["id"], "financing_offer_id": offer["id"]}
+
+    response = client.post("/comparisons/simulate", json={**body, "down_payment": "10000", "months": 36}, headers=auth_headers)
+
+    assert response.status_code == 200
+    # 15.000 al 6,5 % a 36 meses, más el 1,5 % de apertura sobre lo financiado
+    assert response.json() == {
+        "down_payment": "10000", "months": 36, "monthly_payment": "459.73",
+        "total_financing_cost": "26775.28", "total_interest_fees": "1775.28", "annual_rate": "6.50",
+    }
+
+    # Más entrada que el propio precio, plazos imposibles, ofertas ajenas
+    for scenario, expected in (({"down_payment": "25000.01", "months": 36}, 422), ({"down_payment": "0", "months": 0}, 422),
+                               ({"down_payment": "0", "months": 121}, 422), ({"down_payment": "-1", "months": 12}, 422)):
+        assert client.post("/comparisons/simulate", json={**body, **scenario}, headers=auth_headers).status_code == expected
+    other = client.post("/auth/dev-token", json={"email": "otra@familia.com"}).json()["access_token"]
+    stranger = client.post("/comparisons/simulate", json={**body, "down_payment": "0", "months": 12},
+                           headers={"Authorization": f"Bearer {other}"})
+    assert stranger.status_code == 404

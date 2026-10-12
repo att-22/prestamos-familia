@@ -87,6 +87,38 @@ export interface Alert {
   params?: Record<string, AlertParam>;
 }
 
+export interface AmortizationRow {
+  month: number;
+  payment: string;
+  interest: string;
+  principal: string;
+  // Capital pendiente después de esta cuota
+  balance: string;
+}
+
+export interface Amortization {
+  // % nominal anual que resulta de las cuotas (puede no coincidir con el TIN declarado)
+  annual_rate: string;
+  total_interest: string;
+  rows: AmortizationRow[];
+}
+
+export interface ScenarioRequest {
+  purchase_id: string;
+  financing_offer_id: string;
+  down_payment: string;
+  months: number;
+}
+
+export interface ScenarioResult {
+  down_payment: string;
+  months: number;
+  monthly_payment: string;
+  total_financing_cost: string;
+  total_interest_fees: string;
+  annual_rate: string;
+}
+
 export interface ComparisonResult {
   price_cash: string;
   down_payment: string;
@@ -109,6 +141,7 @@ export interface ComparisonResult {
   monthly_income_percent: string | null;
   savings_after_down_payment: string | null;
   alerts: Alert[];
+  amortization: Amortization;
 }
 
 export interface OfferSummary {

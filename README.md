@@ -25,6 +25,10 @@ is in Spanish because that is who it was built for.
   lowest instalment, which are often not the same.
 - **A one-sentence verdict.** Every analysis opens with its conclusion in plain
   words, before any figures.
+- **Amortisation schedule.** A chart and a table, by year or by month, of how
+  each instalment splits between interest and principal.
+- **"What if" simulator.** Sliders for the down payment and the term show how
+  the instalment and the total cost would change at the same interest rate.
 - **Effective APR.** Recomputes the APR (TAE) from the actual cash flows, so it
   can be checked against the rate the lender declares.
 - **Plain-language alerts.** Around twenty rules flag things worth questioning
@@ -256,7 +260,6 @@ address without a password and returns 404 when `ENVIRONMENT=production`.
 
 ## Roadmap
 
-- "What if" sliders to explore a larger down payment or a shorter term
 - Including mandatory insurance in the effective APR
 
 ---

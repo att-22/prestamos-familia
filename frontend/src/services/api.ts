@@ -3,7 +3,8 @@ import type {
   User, AllowedEmail, AdminSettings, AdminUser,
   Purchase, PurchaseCreate, 
   FinancingOffer, FinancingOfferCreate,
-  Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic, OfferRanking
+  Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic, OfferRanking,
+  ScenarioRequest, ScenarioResult
 } from '@/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -92,6 +93,7 @@ export const financingOffersApi = {
 // Comparisons
 export const comparisonsApi = {
   calculate: (data: ComparisonCreate) => api.post<ComparisonResult>('/comparisons/calculate', data),
+  simulate: (data: ScenarioRequest) => api.post<ScenarioResult>('/comparisons/simulate', data),
   create: (data: ComparisonCreate) => api.post<Comparison>('/comparisons', data),
   list: (params?: { skip?: number; limit?: number }) => 
     api.get<Comparison[]>('/comparisons', { params }),

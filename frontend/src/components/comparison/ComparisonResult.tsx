@@ -2,6 +2,7 @@ import { formatCurrency, formatPercent } from '@/utils/format';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { InfoTooltip } from '@/components/ui/Tooltip';
 import { AlertsPanel } from '@/components/comparison/AlertsPanel';
+import { AmortizationCard } from '@/components/comparison/AmortizationCard';
 import { Verdict } from '@/components/comparison/Verdict';
 import { offerVerdict } from '@/utils/verdict';
 import type { ComparisonResult as ComparisonResultData } from '@/types/api';
@@ -98,6 +99,10 @@ export function ComparisonResult({ result, sourceName, showDetails = true }: Com
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {showDetails && (
+        <AmortizationCard amortization={result.amortization} declaredTin={result.tin} residualValue={result.residual_value} />
       )}
 
       {/* Contexto usuario */}

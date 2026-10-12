@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ComparisonResult } from '@/components/comparison/ComparisonResult';
 import { ShareButton } from '@/components/comparison/ShareButton';
+import { WhatIfSimulator } from '@/components/comparison/WhatIfSimulator';
 import { usePurchase, useFinancingOffer, useComparisonPreview, useCreateComparison } from '@/hooks/useApi';
 import type { Comparison, ComparisonCreate } from '@/types/api';
 
@@ -101,6 +102,8 @@ export function ComparisonPage() {
       ) : (
         <>
           <ComparisonResult result={result} sourceName={offer?.source_name} />
+
+          <WhatIfSimulator purchaseId={purchaseId!} offerId={offerId!} result={result} />
 
           <Card>
             <CardHeader>

@@ -38,6 +38,39 @@ class ComparisonCreate(ComparisonBase):
     pass
 
 
+class AmortizationRow(BaseModel):
+    month: int
+    payment: Decimal
+    interest: Decimal
+    principal: Decimal
+    balance: Decimal
+
+
+class Amortization(BaseModel):
+    # % nominal anual que resulta de las cuotas (puede no coincidir con el TIN declarado)
+    annual_rate: Decimal
+    total_interest: Decimal
+    rows: List[AmortizationRow]
+
+
+class ScenarioRequest(BaseModel):
+    """La misma oferta con otra entrada y otro plazo"""
+    purchase_id: UUID
+    financing_offer_id: UUID
+    down_payment: Decimal = Field(..., ge=0)
+    months: int = Field(..., ge=1, le=120)
+
+
+class ScenarioResult(BaseModel):
+    down_payment: Decimal
+    months: int
+    monthly_payment: Decimal
+    total_financing_cost: Decimal
+    total_interest_fees: Decimal
+    # % nominal anual de la oferta, que la simulación mantiene
+    annual_rate: Decimal
+
+
 class ComparisonResult(BaseModel):
     """Resultado completo del cálculo para mostrar en frontend"""
     # Inputs
@@ -68,6 +101,8 @@ class ComparisonResult(BaseModel):
 
     # Alertas
     alerts: List[Alert]
+
+    amortization: Amortization
 
 
 class ComparisonRead(BaseModel):
