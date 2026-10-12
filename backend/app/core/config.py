@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def use_sqlalchemy_scheme(cls, v: str) -> str:
+        # Algunos proveedores entregan la URL como postgres://, que SQLAlchemy no acepta
+        if v.startswith("postgres://"):
+            return "postgresql://" + v[len("postgres://"):]
+        return v
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:

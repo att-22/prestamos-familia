@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.api.routes.auth import auth_limiter
+from app.api.routes.auth import auth_limiter, email_limiter
 from app.core.database import engine, get_session
 from app.main import app
 
@@ -11,8 +11,10 @@ from app.main import app
 def reset_auth_limiter():
     """El límite de intentos vive en memoria: se vacía para que los tests no se afecten."""
     auth_limiter.clear()
+    email_limiter.clear()
     yield
     auth_limiter.clear()
+    email_limiter.clear()
 
 
 @pytest.fixture

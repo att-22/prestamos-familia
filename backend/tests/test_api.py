@@ -1,3 +1,6 @@
+from app.core.database import get_session
+from app.main import app
+
 PURCHASE = {"name": "Toyota Corolla", "price_cash": "25000", "category": "vehicle", "brand": "Toyota", "year": 2024}
 OFFER = {
     "source_name": "Banco Test",
@@ -20,6 +23,18 @@ def test_health(client):
     response = client.get("/healthz")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+def test_health_reports_503_when_the_database_is_down(client):
+    class BrokenSession:
+        def connection(self):
+            raise RuntimeError("connection refused: postgresql://user:secret@host/db")
+
+    app.dependency_overrides[get_session] = lambda: BrokenSession()
+    response = client.get("/healthz")
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "error", "database": "disconnected"}
 
 
 def test_requires_auth(client):

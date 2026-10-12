@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.api.routes.auth import auth_limiter
+from app.api.routes.auth import auth_limiter, email_limiter
 from app.core.config import Settings, get_settings
 from app.core.security import hash_password, verify_password
 
@@ -87,6 +87,16 @@ def test_login_is_blocked_after_repeated_failures(client):
     assert login(client, email="luis@familia.com").status_code == 200
 
 
+def test_an_email_is_blocked_even_if_the_attempts_come_from_different_ips(client, monkeypatch):
+    register(client)
+    # Como si cada intento llegara desde una IP distinta: el límite por IP nunca salta
+    monkeypatch.setattr(auth_limiter, "max_attempts", 10_000)
+    for _ in range(email_limiter.max_attempts):
+        assert login(client, password="no-es-esta-clave").status_code == 401
+
+    assert login(client).status_code == 429
+
+
 def test_successful_login_resets_the_failure_count(client):
     register(client)
     for _ in range(auth_limiter.max_attempts - 1):
@@ -154,6 +164,12 @@ def test_allowed_emails_accept_addresses_and_domains():
     assert not settings.is_email_allowed("luis@ejemplo.com")
     assert not settings.is_email_allowed("ana@nofamilia.com.evil.org")
     assert not Settings(DATABASE_URL="postgresql://x", JWT_SECRET="x", ALLOWED_EMAILS="").is_email_allowed("ana@ejemplo.com")
+
+
+def test_database_url_accepts_the_postgres_scheme():
+    settings = Settings(DATABASE_URL="postgres://user:pw@host/db?sslmode=require", JWT_SECRET="x")
+
+    assert settings.DATABASE_URL == "postgresql://user:pw@host/db?sslmode=require"
 
 
 def test_production_requires_strong_settings():
