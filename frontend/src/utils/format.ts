@@ -1,7 +1,6 @@
 // El español no agrupa los números de cuatro cifras ("5000,00 €" pero "10.000,00 €").
 // En una tabla de importes eso despista, así que se fuerza el punto de millar siempre.
-// (El tipo de useGrouping no admite 'always' hasta lib ES2023.)
-const GROUPING = { useGrouping: 'always' } as unknown as Intl.NumberFormatOptions;
+const GROUPING: Intl.NumberFormatOptions = { useGrouping: 'always' };
 
 export function formatCurrency(value: string | number, decimals = 2): string {
   const num = typeof value === 'string' ? parseFloat(value) : value;

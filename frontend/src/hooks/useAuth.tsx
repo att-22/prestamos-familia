@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi, type AuthResponse, type RegisterData } from '@/services/api';
@@ -12,36 +12,34 @@ interface AuthContextType {
   /** Solo en desarrollo: entra como un usuario de demostración sin contraseña. */
   devLogin: (email: string) => Promise<void>;
   logout: () => void;
-  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function readStoredSession(): { user: User | null; token: string | null } {
+  const token = localStorage.getItem('access_token');
+  const user = localStorage.getItem('user');
+  try {
+    if (token && user) return { token, user: JSON.parse(user) };
+  } catch {
+    // Datos guardados ilegibles: se empieza sin sesión
+  }
+  return { token: null, user: null };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // La sesión guardada se lee al crear el estado: así la primera pintura ya sabe quién hay
+  const [session, setSession] = useState(readStoredSession);
+  const { user, token } = session;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    // Restaurar sesión del localStorage
-    const storedToken = localStorage.getItem('access_token');
-    const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
 
   const startSession = ({ access_token, user: userData }: AuthResponse) => {
     // Lo que quedara en memoria es de quien usó antes este navegador
     queryClient.clear();
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(access_token);
-    setUser(userData);
+    setSession({ token: access_token, user: userData });
     navigate('/dashboard');
   };
 
@@ -61,13 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
+    setSession({ token: null, user: null });
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, devLogin, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register, devLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );
