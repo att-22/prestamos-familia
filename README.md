@@ -40,6 +40,8 @@ is in Spanish because that is who it was built for.
   the debt-to-income ratio and what is left after the down payment.
 - **Shareable results.** Saved comparisons get a public link that shows the
   analysis without the income and savings figures.
+- **PDF.** Any analysis, including a shared one, can be saved as a PDF: a print
+  stylesheet leaves out navigation and controls.
 - **Glossary.** Searchable definitions of the terms a lender will use.
 
 ## How the numbers work
@@ -266,10 +268,6 @@ The app is meant for a closed group, so there is no open sign-up:
 
 `POST /auth/dev-token`, used by the demo buttons and the tests, signs in as any
 address without a password and returns 404 when `ENVIRONMENT=production`.
-
-## Roadmap
-
-- Exporting a comparison to PDF
 
 ---
 

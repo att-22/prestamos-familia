@@ -5,6 +5,7 @@ import { formatCurrency, formatPercent, formatDate } from '@/utils/format';
 import { usePublicComparison } from '@/hooks/useApi';
 import { AlertsPanel } from '@/components/comparison/AlertsPanel';
 import { ComparisonSummary } from '@/components/comparison/ComparisonResult';
+import { PrintButton, PrintHeader } from '@/components/comparison/PrintButton';
 import { ShareButton } from '@/components/comparison/ShareButton';
 
 export function PublicComparison() {
@@ -30,10 +31,12 @@ export function PublicComparison() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 print:max-w-none">
+      <PrintHeader date={formatDate(comparison.created_at)} />
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900">{comparison.purchase_name}</h1>
         <p className="text-gray-600 mt-1">Comparativa compartida • datos del {formatDate(comparison.created_at)}</p>
+        <div className="mt-3"><PrintButton /></div>
       </div>
 
       <ComparisonSummary
@@ -86,7 +89,7 @@ export function PublicComparison() {
 
       <AlertsPanel alerts={comparison.alerts} />
 
-      <Card>
+      <Card className="print:hidden">
         <CardHeader>
           <h3 className="text-lg font-semibold text-gray-900">Compartir esta comparativa</h3>
         </CardHeader>

@@ -14,7 +14,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     };
     
     return (
-      <div ref={ref} className={cn(variants[variant], className)} {...props}>
+      <div ref={ref} className={cn(variants[variant], 'print:break-inside-avoid print:shadow-none', className)} {...props}>
         {children}
       </div>
     );
