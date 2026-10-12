@@ -152,8 +152,8 @@ function SplitChart({ rows }: { rows: AmortizationRow[] }) {
       <figcaption className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-gray-500">
         <span>Cuota 1</span>
         <span className="flex items-center gap-4">
-          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-warning-500" aria-hidden="true" />Intereses</span>
-          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-primary-500" aria-hidden="true" />Capital</span>
+          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-xs bg-warning-500" aria-hidden="true" />Intereses</span>
+          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-xs bg-primary-500" aria-hidden="true" />Capital</span>
         </span>
         <span>Cuota {rows.length}</span>
       </figcaption>

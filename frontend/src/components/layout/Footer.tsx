@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Github } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -29,7 +29,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
             >
-              <Github className="h-5 w-5" aria-hidden="true" />
+              <Code2 className="h-5 w-5" aria-hidden="true" />
               Ver en GitHub
             </a>
           </div>

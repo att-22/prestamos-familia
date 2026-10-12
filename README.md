@@ -67,7 +67,7 @@ by unit tests.
 | Layer | Tools |
 |-------|-------|
 | Backend | FastAPI, SQLModel, PostgreSQL 16, Alembic, JWT auth with bcrypt passwords |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form + Zod |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form + Zod |
 | Quality | pytest, ruff, mypy · Vitest, Playwright, ESLint, `tsc` |
 | Tooling | Docker Compose, GitHub Actions |
 

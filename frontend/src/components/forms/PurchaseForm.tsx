@@ -15,7 +15,7 @@ const purchaseSchema = z.object({
   brand: z.string().optional(),
   model: z.string().optional(),
   year: z.string().optional().refine(v => !v || (parseInt(v) >= 1990 && parseInt(v) <= 2030), 'Año inválido'),
-  is_used: z.boolean().default(false),
+  is_used: z.boolean(),
   notes: z.string().optional(),
 });
 
@@ -111,7 +111,7 @@ export function PurchaseForm({ initialData, onSubmit, onCancel, isLoading, submi
                   <input
                     type="checkbox"
                     {...register('is_used')}
-                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 rounded-sm border-gray-300 text-primary-600 focus:ring-primary-500"
                   />
                   <span className="text-sm text-gray-700">Vehículo de segunda mano</span>
                 </label>

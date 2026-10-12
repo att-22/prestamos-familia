@@ -72,7 +72,7 @@ export function AdminPage() {
           {settings?.registration_code ? (
             <p>
               2. Dale este código de invitación; se lo pedirá la pantalla de registro:{' '}
-              <code className="rounded bg-gray-100 px-2 py-1 font-mono text-gray-900" data-testid="registration-code">
+              <code className="rounded-sm bg-gray-100 px-2 py-1 font-mono text-gray-900" data-testid="registration-code">
                 {settings.registration_code}
               </code>
             </p>
