@@ -10,11 +10,8 @@ from app.models.comparison import Comparison
 from app.models.purchase import Purchase
 from app.models.financing_offer import FinancingOffer
 from app.schemas.comparison import ComparisonCreate, ComparisonRead, ComparisonResult, ComparisonPublic
-from app.services.calculations import (
-    calculate_financing_comparison,
-    CalculationInput,
-    CalculationResult,
-)
+from app.services.calculations import calculate_financing_comparison, CalculationResult
+from app.services.offer_analysis import to_calculation_input
 from app.services.alerts import generate_alerts, PERSONAL_ALERT_CODES
 from app.api.deps import get_current_user_id
 
@@ -42,23 +39,8 @@ def _load_purchase_and_offer(
 def _compute(
     purchase: Purchase, offer: FinancingOffer, comparison_in: ComparisonCreate
 ) -> tuple[CalculationResult, list[dict]]:
-    calc_input = CalculationInput(
-        price_cash=purchase.price_cash,
-        down_payment=offer.down_payment,
-        tin=offer.tin,
-        tae=offer.tae,
-        months=offer.months,
-        monthly_payment=offer.monthly_payment,
-        opening_fee=offer.opening_fee,
-        opening_fee_percent=offer.opening_fee_percent,
-        early_repayment_fee_percent=offer.early_repayment_fee_percent,
-        mandatory_insurance_year=offer.mandatory_insurance_year,
-        residual_value=offer.residual_value,
-        residual_value_percent=offer.residual_value_percent,
-    )
-
     result = calculate_financing_comparison(
-        calc_input,
+        to_calculation_input(purchase, offer),
         user_monthly_income=comparison_in.user_monthly_income,
         user_available_savings=comparison_in.user_available_savings,
     )

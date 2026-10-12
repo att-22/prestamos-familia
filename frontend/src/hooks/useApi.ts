@@ -32,6 +32,7 @@ export function useUpdatePurchase() {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
       // El precio al contado cambia el resultado de las comparativas
       queryClient.invalidateQueries({ queryKey: ['comparisons'] });
+      queryClient.invalidateQueries({ queryKey: ['financing-offers', 'ranking'] });
     },
   });
 }
@@ -62,6 +63,15 @@ export function useFinancingOffer(id: string) {
     queryKey: ['financing-offers', 'detail', id],
     queryFn: () => financingOffersApi.get(id).then(r => r.data),
     enabled: !!id,
+  });
+}
+
+export function useOfferRanking(purchaseId?: string) {
+  return useQuery({
+    queryKey: ['financing-offers', 'ranking', purchaseId],
+    queryFn: () => purchasesApi.offerRanking(purchaseId!).then(r => r.data),
+    enabled: !!purchaseId,
+    placeholderData: keepPreviousData,
   });
 }
 

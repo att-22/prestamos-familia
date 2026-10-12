@@ -100,7 +100,7 @@ export function ComparisonPage() {
         </Card>
       ) : (
         <>
-          <ComparisonResult result={result} />
+          <ComparisonResult result={result} sourceName={offer?.source_name} />
 
           <Card>
             <CardHeader>

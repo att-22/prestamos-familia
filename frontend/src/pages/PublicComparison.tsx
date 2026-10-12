@@ -41,6 +41,8 @@ export function PublicComparison() {
         totalFinancingCost={comparison.total_financing_cost}
         totalInterestFees={comparison.total_interest_fees}
         savingsVsCash={comparison.savings_vs_cash}
+        months={comparison.months}
+        sourceName={comparison.source_name}
       />
 
       <Card>

@@ -2,14 +2,17 @@ import { formatCurrency, formatPercent } from '@/utils/format';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { InfoTooltip } from '@/components/ui/Tooltip';
 import { AlertsPanel } from '@/components/comparison/AlertsPanel';
+import { Verdict } from '@/components/comparison/Verdict';
+import { offerVerdict } from '@/utils/verdict';
 import type { ComparisonResult as ComparisonResultData } from '@/types/api';
 
 interface ComparisonResultProps {
   result: ComparisonResultData;
+  sourceName?: string;
   showDetails?: boolean;
 }
 
-export function ComparisonResult({ result, showDetails = true }: ComparisonResultProps) {
+export function ComparisonResult({ result, sourceName, showDetails = true }: ComparisonResultProps) {
   return (
     <div className="space-y-6">
       <ComparisonSummary
@@ -17,6 +20,8 @@ export function ComparisonResult({ result, showDetails = true }: ComparisonResul
         totalFinancingCost={result.total_financing_cost}
         totalInterestFees={result.total_interest_fees}
         savingsVsCash={result.savings_vs_cash}
+        months={result.months}
+        sourceName={sourceName}
       />
 
       {/* Desglose */}
@@ -134,16 +139,21 @@ interface ComparisonSummaryProps {
   totalFinancingCost: string;
   totalInterestFees: string;
   savingsVsCash: string;
+  months: number;
+  sourceName?: string;
 }
 
-export function ComparisonSummary({ priceCash, totalFinancingCost, totalInterestFees, savingsVsCash }: ComparisonSummaryProps) {
+export function ComparisonSummary({
+  priceCash, totalFinancingCost, totalInterestFees, savingsVsCash, months, sourceName,
+}: ComparisonSummaryProps) {
   // savings_vs_cash = contado - financiado: negativo cuando financiar sale más caro
   const extraCost = -parseFloat(savingsVsCash);
   const financingCostsMore = extraCost > 0;
 
   return (
     <Card variant="elevated">
-      <CardContent className="px-6 py-6">
+      <CardContent className="space-y-5 px-6 py-6">
+        <Verdict>{offerVerdict({ priceCash, extraCost: totalInterestFees, months, sourceName })}</Verdict>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-500">Precio al contado</p>

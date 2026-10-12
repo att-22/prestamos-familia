@@ -119,3 +119,36 @@ test('un enlace que no existe muestra un aviso', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Comparativa no encontrada' })).toBeVisible();
 });
+
+test('con varias ofertas se comparan lado a lado y se señala la más barata', async ({ page, request }) => {
+  const session = await createSession(request);
+  const purchase = await createPurchase(request, session);
+  await createOffer(request, session, purchase.id);
+  await signIn(page, session);
+  await page.goto(`/purchases/${purchase.id}`);
+
+  // Con una sola oferta no hay nada que comparar
+  await expect(page.getByText(/Cuesta de más 5279,20\s€/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Comparativa de ofertas' })).toHaveCount(0);
+
+  // Más entrada y menos plazo: cuota más alta, pero 26.200 € en total
+  await createOffer(request, session, purchase.id, {
+    source_name: 'Banco Corto', down_payment: '10000', tin: '5', tae: '5.2', months: 36, monthly_payment: '450',
+  });
+  await page.reload();
+
+  await expect(page.getByRole('heading', { name: 'Comparativa de ofertas' })).toBeVisible();
+  const rows = page.getByRole('table').locator('tbody tr');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText('Banco Corto');
+  await expect(rows.nth(0)).toContainText('La más barata');
+  await expect(rows.nth(0)).toContainText(/26\.200,00\s€/);
+  await expect(rows.nth(1)).toContainText('Banco Ejemplo');
+  await expect(rows.nth(1)).toContainText('Cuota más baja');
+  await expect(page.getByTestId('verdict')).toContainText('La más barata es Banco Corto');
+  await expect(page.getByTestId('verdict')).toContainText('Ojo: Banco Ejemplo tiene la cuota más baja');
+
+  // Desde la tabla se llega al análisis de cada oferta, que abre con su veredicto
+  await rows.nth(0).getByRole('link', { name: 'Banco Corto' }).click();
+  await expect(page.getByTestId('verdict')).toContainText(/Financiar con Banco Corto te cuesta 1200,00\s€ más que pagar al contado/);
+});

@@ -20,6 +20,11 @@ is in Spanish because that is who it was built for.
   financing offer you get for it.
 - **Cash vs. financing.** Total cost of the offer (down payment, instalments,
   balloon payment, mandatory insurance and fees) against the cash price.
+- **Offers side by side.** With two or more offers for the same purchase, a
+  table ranks them by total cost and marks the cheapest and the one with the
+  lowest instalment, which are often not the same.
+- **A one-sentence verdict.** Every analysis opens with its conclusion in plain
+  words, before any figures.
 - **Effective APR.** Recomputes the APR (TAE) from the actual cash flows, so it
   can be checked against the rate the lender declares.
 - **Plain-language alerts.** Around twenty rules flag things worth questioning
@@ -251,7 +256,6 @@ address without a password and returns 404 when `ENVIRONMENT=production`.
 
 ## Roadmap
 
-- Side-by-side comparison of several offers for the same purchase
 - "What if" sliders to explore a larger down payment or a shorter term
 - Including mandatory insurance in the effective APR
 

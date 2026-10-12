@@ -8,13 +8,15 @@ import { formatCurrency, formatPercent } from '@/utils/format';
 import {
   usePurchase,
   useFinancingOffers,
+  useOfferRanking,
   useCreateFinancingOffer,
   useUpdateFinancingOffer,
   useDeleteFinancingOffer,
 } from '@/hooks/useApi';
 import { FinancingOfferForm, type FinancingOfferFormData } from '@/components/forms/FinancingOfferForm';
+import { OffersRanking } from '@/components/comparison/OffersRanking';
 import { getCategory } from '@/utils/categories';
-import type { FinancingOffer, FinancingOfferCreate } from '@/types/api';
+import type { FinancingOffer, FinancingOfferCreate, OfferSummary } from '@/types/api';
 
 function toPayload(purchaseId: string, data: FinancingOfferFormData): FinancingOfferCreate {
   return {
@@ -58,6 +60,7 @@ export function PurchaseDetail() {
   const navigate = useNavigate();
   const { data: purchase, isLoading: purchaseLoading } = usePurchase(purchaseId!);
   const { data: offers = [], isLoading: offersLoading } = useFinancingOffers(purchaseId);
+  const { data: ranking } = useOfferRanking(purchaseId);
   const createOfferMutation = useCreateFinancingOffer();
   const updateOfferMutation = useUpdateFinancingOffer();
   const deleteOfferMutation = useDeleteFinancingOffer();
@@ -122,6 +125,8 @@ export function PurchaseDetail() {
         </CardContent>
       </Card>
 
+      {ranking && ranking.offers.length > 1 && <OffersRanking ranking={ranking} />}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-lg font-semibold text-gray-900">Ofertas de financiación</h2>
         <Button onClick={() => setShowCreateModal(true)}>
@@ -152,7 +157,7 @@ export function PurchaseDetail() {
             <OfferCard
               key={offer.id}
               offer={offer}
-              cashPrice={purchase.price_cash}
+              summary={ranking?.offers.find(summary => summary.offer_id === offer.id)}
               onEdit={setEditingOffer}
               onDelete={handleDeleteOffer}
             />
@@ -177,25 +182,15 @@ export function PurchaseDetail() {
   );
 }
 
-function OfferCard({ offer, cashPrice, onEdit, onDelete }: {
+function OfferCard({ offer, summary, onEdit, onDelete }: {
   offer: FinancingOffer;
-  cashPrice: string;
+  // Los totales los calcula el backend; faltan un instante mientras llegan
+  summary?: OfferSummary;
   onEdit: (offer: FinancingOffer) => void;
   onDelete: (id: string) => void;
 }) {
-  // Misma fórmula que el backend (services/calculations.py), para la vista rápida
-  const price = parseFloat(cashPrice);
-  const downPayment = parseFloat(offer.down_payment);
-  const totalPayments = parseFloat(offer.monthly_payment) * offer.months;
-  const insurance = parseFloat(offer.mandatory_insurance_year) * offer.months / 12;
-  const fees = parseFloat(offer.opening_fee) + (price - downPayment) * parseFloat(offer.opening_fee_percent) / 100;
-  const residual = offer.residual_value !== null
-    ? parseFloat(offer.residual_value)
-    : offer.residual_value_percent !== null
-      ? price * parseFloat(offer.residual_value_percent) / 100
-      : 0;
-  const totalCost = downPayment + totalPayments + residual + insurance + fees;
-  const extraCost = totalCost - price;
+  const residual = summary?.residual_value ? parseFloat(summary.residual_value) : 0;
+  const extraCost = summary ? parseFloat(summary.total_interest_fees) : null;
 
   return (
     <Card>
@@ -216,9 +211,11 @@ function OfferCard({ offer, cashPrice, onEdit, onDelete }: {
             )}
           </div>
         </div>
-        <Badge variant={extraCost > 0 ? 'danger' : 'success'}>
-          {extraCost > 0 ? 'Cuesta de más' : 'Ahorra'} {formatCurrency(Math.abs(extraCost))}
-        </Badge>
+        {extraCost !== null && (
+          <Badge variant={extraCost > 0 ? 'danger' : 'success'}>
+            {extraCost > 0 ? 'Cuesta de más' : 'Ahorra'} {formatCurrency(Math.abs(extraCost))}
+          </Badge>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 text-sm">
@@ -232,11 +229,11 @@ function OfferCard({ offer, cashPrice, onEdit, onDelete }: {
           </div>
           <div>
             <p className="text-gray-500">Total cuotas</p>
-            <p className="font-medium">{formatCurrency(totalPayments)}</p>
+            <p className="font-medium">{summary ? formatCurrency(summary.total_payments) : '—'}</p>
           </div>
           <div>
             <p className="text-gray-500">Coste total</p>
-            <p className="font-semibold">{formatCurrency(totalCost)}</p>
+            <p className="font-semibold">{summary ? formatCurrency(summary.total_financing_cost) : '—'}</p>
           </div>
         </div>
         <div className="flex gap-2 pt-3 border-t border-gray-200">

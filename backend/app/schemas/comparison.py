@@ -101,3 +101,29 @@ class ComparisonPublic(BaseModel):
     savings_vs_cash: Decimal
     alerts: List[Alert]
     created_at: datetime
+
+
+class OfferSummary(BaseModel):
+    """Una oferta dentro de la comparativa de todas las de una compra"""
+    offer_id: UUID
+    source_name: str
+    down_payment: Decimal
+    monthly_payment: Decimal
+    months: int
+    tin: Decimal
+    tae: Decimal
+    effective_annual_rate: Decimal
+    residual_value: Optional[Decimal] = None
+    total_payments: Decimal
+    total_financing_cost: Decimal
+    # Lo que cuesta de más frente al contado (negativo si financiar sale más barato)
+    total_interest_fees: Decimal
+    is_cheapest: bool
+    has_lowest_payment: bool
+
+
+class OfferRanking(BaseModel):
+    purchase_id: UUID
+    price_cash: Decimal
+    # De la más barata a la más cara
+    offers: List[OfferSummary]
