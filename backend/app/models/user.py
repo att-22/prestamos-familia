@@ -17,6 +17,7 @@ class User(SQLModel, table=True):
     # Hash bcrypt. Vacío en los usuarios de desarrollo creados con /auth/dev-token,
     # que no pueden iniciar sesión con contraseña.
     password_hash: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(255), nullable=True))
+    is_admin: bool = Field(default=False, sa_column=Column(pg.BOOLEAN, nullable=False, default=False))
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),

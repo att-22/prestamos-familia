@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { purchasesApi, financingOffersApi, comparisonsApi } from '@/services/api';
+import { purchasesApi, financingOffersApi, comparisonsApi, adminApi } from '@/services/api';
 import type { PurchaseCreate, FinancingOfferCreate, ComparisonCreate } from '@/types/api';
 
 // Purchases
@@ -137,5 +137,33 @@ export function useDeleteComparison() {
   return useMutation({
     mutationFn: (id: string) => comparisonsApi.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['comparisons', 'list'] }),
+  });
+}
+
+// Admin
+export function useAdminSettings() {
+  return useQuery({ queryKey: ['admin', 'settings'], queryFn: () => adminApi.settings().then(r => r.data) });
+}
+
+export function useAllowedEmails() {
+  return useQuery({
+    queryKey: ['admin', 'allowed-emails'],
+    queryFn: () => adminApi.listAllowedEmails().then(r => r.data),
+  });
+}
+
+export function useAddAllowedEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (entry: string) => adminApi.addAllowedEmail(entry).then(r => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'allowed-emails'] }),
+  });
+}
+
+export function useRemoveAllowedEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminApi.removeAllowedEmail(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'allowed-emails'] }),
   });
 }

@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { Menu, X, LogOut, User, Wallet, ShoppingBag, Calculator, BookOpen } from 'lucide-react';
+import { Menu, X, LogOut, User, Wallet, ShoppingBag, Calculator, BookOpen, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
@@ -12,6 +12,7 @@ export function Header() {
     { path: '/dashboard', label: 'Mis compras', icon: ShoppingBag },
     { path: '/comparisons', label: 'Mis comparativas', icon: Calculator },
     { path: '/glossary', label: 'Glosario', icon: BookOpen },
+    ...(user?.is_admin ? [{ path: '/admin', label: 'Administración', icon: ShieldCheck }] : []),
   ];
 
   return (

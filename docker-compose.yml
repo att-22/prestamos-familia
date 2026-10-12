@@ -29,6 +29,8 @@ services:
       # Quién puede registrarse: emails o dominios separados por comas
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-@familia.com}
       REGISTRATION_CODE: ${REGISTRATION_CODE:-}
+      # Cuenta que administra los correos autorizados desde la app
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@familia.com}
       ENVIRONMENT: development
       CORS_ORIGINS: http://localhost:5173
     ports:

@@ -1,6 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { 
-  User,
+  User, AllowedEmail, AdminSettings,
   Purchase, PurchaseCreate, 
   FinancingOffer, FinancingOfferCreate,
   Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic
@@ -56,6 +56,14 @@ export const authApi = {
   register: (data: RegisterData) => api.post<AuthResponse>('/auth/register', data),
   devToken: (email: string) => api.post<AuthResponse>('/auth/dev-token', { email }),
   me: () => api.get<User>('/auth/me'),
+};
+
+// Admin
+export const adminApi = {
+  settings: () => api.get<AdminSettings>('/admin/settings'),
+  listAllowedEmails: () => api.get<AllowedEmail[]>('/admin/allowed-emails'),
+  addAllowedEmail: (entry: string) => api.post<AllowedEmail>('/admin/allowed-emails', { entry }),
+  removeAllowedEmail: (id: string) => api.delete(`/admin/allowed-emails/${id}`),
 };
 
 // Purchases
