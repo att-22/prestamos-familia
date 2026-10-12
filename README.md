@@ -236,8 +236,11 @@ The app is meant for a closed group, so there is no open sign-up:
   further attempts for 15 minutes, and so do twenty for an address from any IP:
   behind a proxy the client address comes from a header that can be forged. The
   counters are kept in memory, which is enough for a single backend instance.
-- **Forgotten passwords** are reset by the administrator, as there is no email
-  service:
+- **Forgotten passwords.** There is no email service, so the administrator
+  resets them from the admin page. That clears the password without the
+  administrator ever knowing one: the person picks a new one through "Crea tu
+  cuenta" with the registration code, and keeps their data. With shell access
+  there is also a command that sets a password directly:
 
   ```bash
   docker compose exec backend python -m app.cli reset-password someone@example.com

@@ -167,3 +167,16 @@ export function useRemoveAllowedEmail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'allowed-emails'] }),
   });
 }
+
+export function useAdminUsers() {
+  return useQuery({ queryKey: ['admin', 'users'], queryFn: () => adminApi.listUsers().then(r => r.data) });
+}
+
+export function useResetPassword() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.resetPassword(userId).then(r => r.data),
+    // También cambia el estado «Cuenta creada» de la lista de correos
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin'] }),
+  });
+}

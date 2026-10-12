@@ -9,7 +9,8 @@ from app.core.config import get_settings
 from app.core.database import get_session
 from app.models.allowed_email import AllowedEmail
 from app.models.user import User
-from app.schemas.admin import AdminSettings, AllowedEmailCreate, AllowedEmailRead
+from app.schemas.admin import AdminSettings, AdminUserRead, AllowedEmailCreate, AllowedEmailRead
+from app.services.access import is_registration_allowed
 
 # Todo el router exige ser administrador
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
@@ -83,3 +84,49 @@ async def remove_allowed_email(entry_id: UUID, session: Session = Depends(get_se
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
     session.delete(row)
     session.commit()
+
+
+def _read_user(user: User) -> AdminUserRead:
+    return AdminUserRead(
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        is_admin=user.is_admin,
+        has_password=user.password_hash is not None,
+        created_at=user.created_at,
+    )
+
+
+@router.get("/users", response_model=List[AdminUserRead])
+async def list_users(session: Session = Depends(get_session)):
+    return [_read_user(user) for user in session.exec(select(User).order_by(col(User.email))).all()]
+
+
+@router.post("/users/{user_id}/reset-password", response_model=AdminUserRead)
+async def reset_user_password(
+    user_id: UUID,
+    admin: User = Depends(get_current_admin),
+    session: Session = Depends(get_session),
+):
+    """Borra la contraseña de alguien que la ha olvidado.
+
+    No hay correo con el que enviar un enlace, y así el administrador tampoco llega a
+    conocer la contraseña: la persona elige una nueva volviendo a «Crea tu cuenta» con
+    el código de invitación. Sus datos se conservan.
+    """
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="No puedes restablecer tu propia contraseña desde aquí.")
+    if not is_registration_allowed(session, user.email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ese email ya no está autorizado y no podría volver a crear su cuenta. Autorízalo antes.",
+        )
+
+    user.password_hash = None
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return _read_user(user)

@@ -19,6 +19,16 @@ export interface AllowedEmail {
   created_at: string | null;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string | null;
+  is_admin: boolean;
+  // false tras restablecer la contraseña, hasta que la persona vuelve a crear su cuenta
+  has_password: boolean;
+  created_at: string;
+}
+
 export interface AdminSettings {
   registration_code: string | null;
   admin_email: string | null;

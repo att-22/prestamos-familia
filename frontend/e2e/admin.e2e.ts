@@ -49,7 +49,7 @@ test('el administrador autoriza un email y esa persona puede registrarse', async
     await page.getByLabel('Email o dominio').fill(email);
     await page.getByRole('button', { name: 'Autorizar' }).click();
 
-    const row = page.getByRole('listitem').filter({ hasText: email });
+    const row = page.getByRole('list', { name: 'Correos autorizados' }).getByRole('listitem').filter({ hasText: email });
     await expect(row.getByText('Pendiente de registrarse')).toBeVisible();
     await expect(page.getByLabel('Email o dominio')).toHaveValue('');
 
@@ -80,7 +80,37 @@ test('la administración rechaza entradas inválidas y repetidas', async ({ page
   await page.getByRole('button', { name: 'Autorizar' }).click();
   await expect(page.getByRole('alert')).toContainText('ya está autorizado');
 
-  const adminRow = page.getByRole('listitem').filter({ hasText: ADMIN_EMAIL });
+  const adminRow = page.getByRole('list', { name: 'Correos autorizados' }).getByRole('listitem').filter({ hasText: ADMIN_EMAIL });
   await expect(adminRow.getByText('Fijado en la configuración')).toBeVisible();
   await expect(adminRow.getByRole('button')).toHaveCount(0);
+});
+
+test('el administrador restablece una contraseña olvidada', async ({ page, request }) => {
+  const admin = await adminSession(request);
+  const email = uniqueEmail();
+  const login = (password: string) => request.post(`${API_URL}/auth/login`, { data: { email, password } });
+  page.on('dialog', dialog => dialog.accept());
+
+  try {
+    expect((await request.post(`${API_URL}/auth/register`, { data: { email, password: PASSWORD } })).status()).toBe(201);
+
+    await signIn(page, admin);
+    await page.goto('/admin');
+    const accounts = page.getByRole('list', { name: 'Cuentas' });
+    const row = accounts.getByRole('listitem').filter({ hasText: email });
+    await row.getByRole('button', { name: 'Restablecer contraseña' }).click();
+
+    await expect(page.getByRole('status')).toContainText('Contraseña restablecida');
+    await expect(row.getByText('Sin contraseña')).toBeVisible();
+    await expect(row.getByRole('button')).toHaveCount(0);
+    // El propio administrador no tiene botón para dejarse fuera
+    await expect(accounts.getByRole('listitem').filter({ hasText: ADMIN_EMAIL }).getByRole('button')).toHaveCount(0);
+
+    expect((await login(PASSWORD)).status()).toBe(401);
+    const newPassword = 'otra-clave-distinta-2';
+    expect((await request.post(`${API_URL}/auth/register`, { data: { email, password: newPassword } })).status()).toBe(201);
+    expect((await login(newPassword)).status()).toBe(200);
+  } finally {
+    await deleteAccount(request, email);
+  }
 });
