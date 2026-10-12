@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
-from typing import Optional
-from sqlmodel import SQLModel, Field, Column
+
 import sqlalchemy.dialects.postgresql as pg
+from sqlmodel import Column, Field, SQLModel
 
 
 class User(SQLModel, table=True):
@@ -13,10 +13,10 @@ class User(SQLModel, table=True):
         sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, nullable=False),
     )
     email: str = Field(sa_column=Column(pg.VARCHAR(255), unique=True, index=True, nullable=False))
-    name: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
+    name: str | None = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
     # Hash bcrypt. Vacío en los usuarios de desarrollo creados con /auth/dev-token,
     # que no pueden iniciar sesión con contraseña.
-    password_hash: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(255), nullable=True))
+    password_hash: str | None = Field(default=None, sa_column=Column(pg.VARCHAR(255), nullable=True))
     is_admin: bool = Field(default=False, sa_column=Column(pg.BOOLEAN, nullable=False, default=False))
     created_at: datetime = Field(
         default_factory=datetime.utcnow,

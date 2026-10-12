@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
-from sqlalchemy import ForeignKey
-from sqlmodel import SQLModel, Field, Column, Relationship
+from typing import TYPE_CHECKING
+
 import sqlalchemy.dialects.postgresql as pg
+from sqlalchemy import ForeignKey
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.comparison import Comparison
@@ -34,10 +35,10 @@ class FinancingOffer(SQLModel, table=True):
     early_repayment_fee_percent: Decimal = Field(default=Decimal("0"), sa_column=Column(pg.NUMERIC(5, 2), nullable=False, default=0), description="Comisión amortización anticipada %")
     mandatory_insurance_year: Decimal = Field(default=Decimal("0"), sa_column=Column(pg.NUMERIC(12, 2), nullable=False, default=0), description="Seguro obligatorio anual")
 
-    residual_value: Optional[Decimal] = Field(default=None, sa_column=Column(pg.NUMERIC(12, 2), nullable=True), description="Valor residual al final del contrato")
-    residual_value_percent: Optional[Decimal] = Field(default=None, sa_column=Column(pg.NUMERIC(5, 2), nullable=True), description="Valor residual % sobre precio")
+    residual_value: Decimal | None = Field(default=None, sa_column=Column(pg.NUMERIC(12, 2), nullable=True), description="Valor residual al final del contrato")
+    residual_value_percent: Decimal | None = Field(default=None, sa_column=Column(pg.NUMERIC(5, 2), nullable=True), description="Valor residual % sobre precio")
 
-    notes: Optional[str] = Field(default=None, sa_column=Column(pg.TEXT, nullable=True))
+    notes: str | None = Field(default=None, sa_column=Column(pg.TEXT, nullable=True))
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),

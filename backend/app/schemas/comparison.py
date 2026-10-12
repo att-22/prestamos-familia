@@ -1,12 +1,13 @@
-from pydantic import BaseModel, ConfigDict, Field
-from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, Literal, Optional, List
-from enum import Enum
+from enum import StrEnum
+from typing import Literal
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class AlertType(str, Enum):
+class AlertType(StrEnum):
     WARNING = "warning"
     INFO = "info"
     SUCCESS = "success"
@@ -24,14 +25,14 @@ class Alert(BaseModel):
     message: str
     code: str
     # Vacío en las comparativas guardadas antes de separar las cifras del texto
-    params: Dict[str, AlertParam] = {}
+    params: dict[str, AlertParam] = {}
 
 
 class ComparisonBase(BaseModel):
     purchase_id: UUID
     financing_offer_id: UUID
-    user_monthly_income: Optional[Decimal] = Field(None, ge=0)
-    user_available_savings: Optional[Decimal] = Field(None, ge=0)
+    user_monthly_income: Decimal | None = Field(None, ge=0)
+    user_available_savings: Decimal | None = Field(None, ge=0)
 
 
 class ComparisonCreate(ComparisonBase):
@@ -50,7 +51,7 @@ class Amortization(BaseModel):
     # % nominal anual que resulta de las cuotas (puede no coincidir con el TIN declarado)
     annual_rate: Decimal
     total_interest: Decimal
-    rows: List[AmortizationRow]
+    rows: list[AmortizationRow]
 
 
 class ScenarioRequest(BaseModel):
@@ -83,7 +84,7 @@ class ComparisonResult(BaseModel):
     opening_fee: Decimal
     early_repayment_fee_percent: Decimal
     mandatory_insurance_year: Decimal
-    residual_value: Optional[Decimal] = None
+    residual_value: Decimal | None = None
 
     # Calculados
     financed_amount: Decimal
@@ -96,11 +97,11 @@ class ComparisonResult(BaseModel):
     effective_annual_rate: Decimal
 
     # Contexto usuario
-    monthly_income_percent: Optional[Decimal] = None
-    savings_after_down_payment: Optional[Decimal] = None
+    monthly_income_percent: Decimal | None = None
+    savings_after_down_payment: Decimal | None = None
 
     # Alertas
-    alerts: List[Alert]
+    alerts: list[Alert]
 
     amortization: Amortization
 
@@ -112,15 +113,15 @@ class ComparisonRead(BaseModel):
     user_id: UUID
     purchase_id: UUID
     financing_offer_id: UUID
-    purchase_name: Optional[str] = None
-    source_name: Optional[str] = None
+    purchase_name: str | None = None
+    source_name: str | None = None
     total_financing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
-    monthly_income_percent: Optional[Decimal]
-    user_monthly_income: Optional[Decimal] = None
-    user_available_savings: Optional[Decimal] = None
-    alerts_json: List[dict]
+    monthly_income_percent: Decimal | None
+    user_monthly_income: Decimal | None = None
+    user_available_savings: Decimal | None = None
+    alerts_json: list[dict]
     shared_slug: str
     is_public: bool
     created_at: datetime
@@ -137,11 +138,11 @@ class ComparisonPublic(BaseModel):
     tae: Decimal
     months: int
     monthly_payment: Decimal
-    residual_value: Optional[Decimal] = None
+    residual_value: Decimal | None = None
     total_financing_cost: Decimal
     total_interest_fees: Decimal
     savings_vs_cash: Decimal
-    alerts: List[Alert]
+    alerts: list[Alert]
     created_at: datetime
 
 
@@ -155,7 +156,7 @@ class OfferSummary(BaseModel):
     tin: Decimal
     tae: Decimal
     effective_annual_rate: Decimal
-    residual_value: Optional[Decimal] = None
+    residual_value: Decimal | None = None
     total_payments: Decimal
     total_financing_cost: Decimal
     # Lo que cuesta de más frente al contado (negativo si financiar sale más barato)
@@ -168,4 +169,4 @@ class OfferRanking(BaseModel):
     purchase_id: UUID
     price_cash: Decimal
     # De la más barata a la más cara
-    offers: List[OfferSummary]
+    offers: list[OfferSummary]

@@ -1,14 +1,15 @@
-from dataclasses import asdict
-from typing import List
-from uuid import UUID
 import secrets
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from dataclasses import asdict
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, select
 
+from app.api.deps import get_current_user_id
 from app.core.database import get_session
 from app.models.comparison import Comparison
-from app.models.purchase import Purchase
 from app.models.financing_offer import FinancingOffer
+from app.models.purchase import Purchase
 from app.schemas.comparison import (
     ComparisonCreate,
     ComparisonPublic,
@@ -17,11 +18,10 @@ from app.schemas.comparison import (
     ScenarioRequest,
     ScenarioResult,
 )
-from app.services.calculations import calculate_financing_comparison, CalculationResult
+from app.services.alerts import PERSONAL_ALERT_CODES, generate_alerts
 from app.services.amortization import max_down_payment, schedule_for, simulate
+from app.services.calculations import CalculationResult, calculate_financing_comparison
 from app.services.offer_analysis import to_calculation_input
-from app.services.alerts import generate_alerts, PERSONAL_ALERT_CODES
-from app.api.deps import get_current_user_id
 
 router = APIRouter(prefix="/comparisons", tags=["comparisons"])
 
@@ -160,7 +160,7 @@ def create_comparison(
     return comparison
 
 
-@router.get("", response_model=List[ComparisonRead])
+@router.get("", response_model=list[ComparisonRead])
 def list_comparisons(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),

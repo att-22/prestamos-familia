@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional
-from enum import Enum
+from decimal import ROUND_HALF_UP, Decimal
+from enum import StrEnum
 
 
-class AlertType(str, Enum):
+class AlertType(StrEnum):
     WARNING = "warning"
     INFO = "info"
     SUCCESS = "success"
@@ -18,18 +17,18 @@ class Alert:
     # para que quien lo muestre las escriba con el formato de su idioma.
     message: str
     code: str
-    params: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    params: dict[str, dict[str, str]] = field(default_factory=dict)
 
 
-def percent(value: Decimal) -> Dict[str, str]:
+def percent(value: Decimal) -> dict[str, str]:
     return {"value": str(value), "kind": "percent"}
 
 
-def currency(value: Decimal) -> Dict[str, str]:
+def currency(value: Decimal) -> dict[str, str]:
     return {"value": str(value), "kind": "currency"}
 
 
-def number(value: Decimal | int) -> Dict[str, str]:
+def number(value: Decimal | int) -> dict[str, str]:
     return {"value": str(value), "kind": "number"}
 
 
@@ -84,12 +83,12 @@ def generate_alerts(
     total_interest_fees: Decimal,
     savings_vs_cash: Decimal,
     effective_annual_rate: Decimal,
-    monthly_income_percent: Optional[Decimal] = None,
-    savings_after_down_payment: Optional[Decimal] = None,
-    user_available_savings: Optional[Decimal] = None,
-    residual_value: Optional[Decimal] = None,
+    monthly_income_percent: Decimal | None = None,
+    savings_after_down_payment: Decimal | None = None,
+    user_available_savings: Decimal | None = None,
+    residual_value: Decimal | None = None,
     category: str = "other",
-) -> List[Alert]:
+) -> list[Alert]:
     """Genera alertas y consejos basados en reglas de sentido común financiero"""
     alerts = []
     limits = thresholds_for(category)

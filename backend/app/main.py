@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes import admin, auth, comparisons, financing_offers, health, purchases
 from app.core.config import get_settings
-from app.api.routes import health, auth, admin, purchases, financing_offers, comparisons
 
 settings = get_settings()
 

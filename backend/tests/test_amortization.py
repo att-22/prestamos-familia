@@ -2,7 +2,12 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.amortization import build_schedule, implied_monthly_rate, payment_for, simulate
+from app.services.amortization import (
+    build_schedule,
+    implied_monthly_rate,
+    payment_for,
+    simulate,
+)
 from app.services.calculations import CalculationInput
 
 # 20.000 € al 6,5 % TIN a 60 meses -> cuota francesa de 391,32 €

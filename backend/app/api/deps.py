@@ -1,5 +1,5 @@
-from typing import Optional
 from uuid import UUID
+
 from fastapi import Depends, Header, HTTPException, status
 from sqlmodel import Session
 
@@ -9,7 +9,7 @@ from app.models.user import User
 
 
 def get_current_user(
-    authorization: Optional[str] = Header(None),
+    authorization: str | None = Header(None),
     session: Session = Depends(get_session),
 ) -> User:
     """Usuario al que pertenece el JWT de la cabecera Authorization."""
@@ -32,7 +32,7 @@ def get_current_user(
     try:
         user_id = UUID(token_data.user_id)
     except ValueError:
-        raise invalid
+        raise invalid from None
 
     # Un token válido de una cuenta ya borrada tampoco sirve
     user = session.get(User, user_id)

@@ -6,7 +6,6 @@ esté mal copiado o la entidad lo haya redondeado.
 """
 from dataclasses import dataclass, replace
 from decimal import Decimal
-from typing import List
 
 from app.services.calculations import (
     CalculationInput,
@@ -34,7 +33,7 @@ class ScheduleRow:
 class Schedule:
     annual_rate: Decimal  # % nominal anual que resulta de las cuotas
     total_interest: Decimal
-    rows: List[ScheduleRow]
+    rows: list[ScheduleRow]
 
 
 def _present_value(monthly_payment: Decimal, months: int, residual: Decimal, rate: Decimal) -> Decimal:
@@ -72,7 +71,7 @@ def payment_for(principal: Decimal, monthly_rate: Decimal, months: int, residual
 def build_schedule(principal: Decimal, monthly_payment: Decimal, months: int, residual: Decimal = ZERO) -> Schedule:
     rate = implied_monthly_rate(principal, monthly_payment, months, residual)
     balance = principal
-    rows: List[ScheduleRow] = []
+    rows: list[ScheduleRow] = []
 
     for month in range(1, months + 1):
         interest = round_eur(balance * rate)

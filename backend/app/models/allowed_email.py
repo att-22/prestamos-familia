@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Column
+
 import sqlalchemy.dialects.postgresql as pg
+from sqlmodel import Column, Field, SQLModel
 
 
 class AllowedEmail(SQLModel, table=True):
