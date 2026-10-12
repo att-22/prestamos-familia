@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi, type AuthResponse, type RegisterData } from '@/services/api';
 import type { User } from '@/types/api';
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Restaurar sesión del localStorage
@@ -34,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const startSession = ({ access_token, user: userData }: AuthResponse) => {
+    // Lo que quedara en memoria es de quien usó antes este navegador
+    queryClient.clear();
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('user', JSON.stringify(userData));
     setToken(access_token);
@@ -54,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    queryClient.clear();
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     setToken(null);

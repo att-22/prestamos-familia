@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { PASSWORD, deleteAccount, registerAccount, uniqueEmail } from './helpers';
+import { CAR, PASSWORD, createPurchase, createSession, deleteAccount, registerAccount, signIn, uniqueEmail } from './helpers';
 
 test('las rutas privadas redirigen al login', async ({ page }) => {
   await page.goto('/dashboard');
@@ -94,4 +94,26 @@ test('un email no autorizado no puede registrarse', async ({ page }) => {
 
   await expect(page.getByRole('alert')).toContainText('no está autorizado');
   await expect(page).toHaveURL(/\/login$/);
+});
+
+test('al cambiar de usuario en el mismo navegador no se ven los datos del anterior', async ({ page, request }) => {
+  const first = await createSession(request);
+  await createPurchase(request, first, { ...CAR, name: 'Coche del primero' });
+  const second = await registerAccount(request);
+  try {
+    await signIn(page, first);
+    await page.goto('/dashboard');
+    await expect(page.getByText('Coche del primero')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Salir' }).click();
+    await page.getByLabel('Email').fill(second);
+    await page.getByLabel('Contraseña').fill(PASSWORD);
+    await page.getByRole('button', { name: 'Entrar' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Mis compras' })).toBeVisible();
+    await expect(page.getByText('Todavía no hay compras')).toBeVisible();
+    await expect(page.getByText('Coche del primero')).toHaveCount(0);
+  } finally {
+    await deleteAccount(request, second);
+  }
 });
