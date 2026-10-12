@@ -109,7 +109,13 @@ export function ComparisonPage() {
 
           {/* El simulador y el guardado son para usar en pantalla: no van al PDF */}
           <div className="print:hidden">
-            <WhatIfSimulator purchaseId={purchaseId!} offerId={offerId!} result={result} />
+            {/* La key reinicia los controles si la oferta cambia */}
+            <WhatIfSimulator
+              key={`${result.down_payment}-${result.months}`}
+              purchaseId={purchaseId!}
+              offerId={offerId!}
+              result={result}
+            />
           </div>
 
           <Card className="print:hidden">

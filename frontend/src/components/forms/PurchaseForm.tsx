@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Input } from '@/components/ui/Input';
@@ -30,7 +30,7 @@ interface PurchaseFormProps {
 }
 
 export function PurchaseForm({ initialData, onSubmit, onCancel, isLoading, submitLabel = 'Guardar compra' }: PurchaseFormProps) {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<PurchaseFormData>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<PurchaseFormData>({
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
       name: '',
@@ -45,7 +45,7 @@ export function PurchaseForm({ initialData, onSubmit, onCancel, isLoading, submi
     },
   });
 
-  const isVehicle = watch('category') === 'vehicle';
+  const isVehicle = useWatch({ control, name: 'category' }) === 'vehicle';
 
   return (
     <Card>

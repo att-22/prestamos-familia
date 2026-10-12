@@ -48,12 +48,6 @@ export function WhatIfSimulator({ purchaseId, offerId, result }: WhatIfSimulator
   const [downPayment, setDownPayment] = useState(originalDownPayment);
   const [months, setMonths] = useState(originalMonths);
 
-  // Si se edita la oferta, los controles vuelven a sus valores
-  useEffect(() => {
-    setDownPayment(originalDownPayment);
-    setMonths(originalMonths);
-  }, [originalDownPayment, originalMonths]);
-
   const changed = downPayment !== originalDownPayment || months !== originalMonths;
   const request = useDebounced({ downPayment, months });
   const { data: scenario, isError } = useScenario(

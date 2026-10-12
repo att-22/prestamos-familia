@@ -12,13 +12,13 @@ const MARGIN = 8;
 
 export function Tooltip({ content, children }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [container, setContainer] = useState<Element | null>(null);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Se pinta fuera de su contenedor, con posición fija, para que ningún overflow lo
-  // recorte, y se ajusta a la ventana. Dentro de un modal va en el propio <dialog>:
-  // lo que queda fuera de él está debajo de la capa superior y no se vería.
+  // recorte, y se ajusta a la ventana.
   useLayoutEffect(() => {
     if (!isOpen || !triggerRef.current || !tooltipRef.current) return;
     const trigger = triggerRef.current.getBoundingClientRect();
@@ -49,7 +49,11 @@ export function Tooltip({ content, children }: TooltipProps) {
     };
   }, [isOpen]);
 
-  const open = () => setIsOpen(true);
+  const open = () => {
+    // Dentro de un modal va en el propio <dialog>: lo que queda fuera está debajo de la capa superior
+    setContainer(triggerRef.current?.closest('dialog') ?? document.body);
+    setIsOpen(true);
+  };
   const close = () => {
     setIsOpen(false);
     setCoords(null);
@@ -67,7 +71,7 @@ export function Tooltip({ content, children }: TooltipProps) {
       onClick={open}
     >
       {children}
-      {isOpen && createPortal(
+      {isOpen && container && createPortal(
         <div
           ref={tooltipRef}
           role="tooltip"
@@ -81,7 +85,7 @@ export function Tooltip({ content, children }: TooltipProps) {
         >
           {content}
         </div>,
-        triggerRef.current?.closest('dialog') ?? document.body
+        container
       )}
     </span>
   );
