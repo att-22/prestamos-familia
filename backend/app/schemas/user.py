@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
@@ -18,13 +18,12 @@ class UserUpdate(BaseModel):
 
 
 class UserRead(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     is_admin: bool = False
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class LoginRequest(BaseModel):

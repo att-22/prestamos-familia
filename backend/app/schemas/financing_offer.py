@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
@@ -42,10 +42,9 @@ class FinancingOfferUpdate(BaseModel):
 
 
 class FinancingOfferRead(FinancingOfferBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     purchase_id: UUID
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True

@@ -22,7 +22,7 @@ def _registered_emails(session: Session) -> set[str]:
 
 
 @router.get("/settings", response_model=AdminSettings)
-async def get_admin_settings():
+def get_admin_settings():
     """Lo que el administrador necesita para invitar a alguien."""
     return AdminSettings(
         registration_code=settings.REGISTRATION_CODE or None,
@@ -31,7 +31,7 @@ async def get_admin_settings():
 
 
 @router.get("/allowed-emails", response_model=List[AllowedEmailRead])
-async def list_allowed_emails(session: Session = Depends(get_session)):
+def list_allowed_emails(session: Session = Depends(get_session)):
     registered = _registered_emails(session)
 
     def read(entry: str, source: str, row: AllowedEmail | None = None) -> AllowedEmailRead:
@@ -53,7 +53,7 @@ async def list_allowed_emails(session: Session = Depends(get_session)):
 
 
 @router.post("/allowed-emails", response_model=AllowedEmailRead, status_code=status.HTTP_201_CREATED)
-async def add_allowed_email(data: AllowedEmailCreate, session: Session = Depends(get_session)):
+def add_allowed_email(data: AllowedEmailCreate, session: Session = Depends(get_session)):
     already_there = (
         data.entry == settings.ADMIN_EMAIL
         or data.entry in settings.ALLOWED_EMAILS
@@ -77,7 +77,7 @@ async def add_allowed_email(data: AllowedEmailCreate, session: Session = Depends
 
 
 @router.delete("/allowed-emails/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_allowed_email(entry_id: UUID, session: Session = Depends(get_session)):
+def remove_allowed_email(entry_id: UUID, session: Session = Depends(get_session)):
     """Impide nuevos registros con esa entrada. Las cuentas ya creadas no se tocan."""
     row = session.get(AllowedEmail, entry_id)
     if not row:
@@ -98,12 +98,12 @@ def _read_user(user: User) -> AdminUserRead:
 
 
 @router.get("/users", response_model=List[AdminUserRead])
-async def list_users(session: Session = Depends(get_session)):
+def list_users(session: Session = Depends(get_session)):
     return [_read_user(user) for user in session.exec(select(User).order_by(col(User.email))).all()]
 
 
 @router.post("/users/{user_id}/reset-password", response_model=AdminUserRead)
-async def reset_user_password(
+def reset_user_password(
     user_id: UUID,
     admin: User = Depends(get_current_admin),
     session: Session = Depends(get_session),

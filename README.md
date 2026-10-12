@@ -177,6 +177,10 @@ runs the end-to-end tests. All of them run on every pull request; on pushes to
 The deploy job is skipped until the `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
 `VERCEL_PROJECT_ID` repository secrets are set.
 
+Dependabot opens one grouped pull request a week per ecosystem (pip, npm and
+GitHub Actions) for minor and patch releases, and a separate one for each major
+version, so they go through the same checks as any other change.
+
 ## Deployment
 
 Everything fits in free tiers:

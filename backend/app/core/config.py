@@ -42,10 +42,12 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL")
     @classmethod
-    def use_sqlalchemy_scheme(cls, v: str) -> str:
-        # Algunos proveedores entregan la URL como postgres://, que SQLAlchemy no acepta
-        if v.startswith("postgres://"):
-            return "postgresql://" + v[len("postgres://"):]
+    def use_psycopg_driver(cls, v: str) -> str:
+        # Los proveedores entregan postgres:// o postgresql://. Se fija el driver para no
+        # depender del que SQLAlchemy elija por defecto, que cambió entre la 2.0 y la 2.1.
+        for scheme in ("postgres://", "postgresql://"):
+            if v.startswith(scheme):
+                return "postgresql+psycopg://" + v[len(scheme):]
         return v
 
     @field_validator("CORS_ORIGINS", mode="before")
