@@ -61,3 +61,18 @@
     @apply py-8 sm:py-12 lg:py-16;
   }
 }
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+  html,
+  body {
+    background: white !important;
+  }
+  /* Sin esto el navegador quita los fondos: el gráfico y los avisos saldrían en blanco */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -55,7 +55,7 @@ export function AmortizationCard({ amortization, declaredTin, residualValue }: A
       <CardContent className="space-y-5">
         {hasInterest && <SplitChart rows={rows} />}
 
-        <div className={`overflow-x-auto ${monthly ? 'max-h-96 overflow-y-auto' : ''}`}>
+        <div className={`overflow-x-auto print:max-h-none print:overflow-visible ${monthly ? 'max-h-96 overflow-y-auto' : ''}`}>
           <table className="w-full text-sm">
             <thead className={monthly ? 'sticky top-0 bg-white' : undefined}>
               <tr className="border-b border-gray-200 text-gray-500">
@@ -88,7 +88,7 @@ export function AmortizationCard({ amortization, declaredTin, residualValue }: A
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button variant="outline" size="sm" onClick={() => setMonthly(!monthly)}>
+          <Button variant="outline" size="sm" className="print:hidden" onClick={() => setMonthly(!monthly)}>
             {monthly ? 'Ver por años' : 'Ver mes a mes'}
           </Button>
           <p className="text-xs text-gray-500">

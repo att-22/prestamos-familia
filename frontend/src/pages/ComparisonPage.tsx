@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ComparisonResult } from '@/components/comparison/ComparisonResult';
+import { PrintButton, PrintHeader } from '@/components/comparison/PrintButton';
 import { ShareButton } from '@/components/comparison/ShareButton';
 import { WhatIfSimulator } from '@/components/comparison/WhatIfSimulator';
+import { formatDate } from '@/utils/format';
 import { usePurchase, useFinancingOffer, useComparisonPreview, useCreateComparison } from '@/hooks/useApi';
 import type { Comparison, ComparisonCreate } from '@/types/api';
 
@@ -44,20 +46,22 @@ export function ComparisonPage() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader date={formatDate(new Date().toISOString())} />
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => navigate(`/purchases/${purchaseId}`)}>
+        <Button variant="outline" size="sm" className="print:hidden" onClick={() => navigate(`/purchases/${purchaseId}`)}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Volver
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">{purchase?.name ?? 'Comparativa'}</h1>
           <p className="text-gray-600">
             Pagar al contado frente a financiar{offer ? ` con ${offer.source_name}` : ''}
           </p>
         </div>
+        {result && <PrintButton />}
       </div>
 
-      <Card>
+      <Card className="print:hidden">
         <CardHeader>
           <h2 className="text-lg font-semibold text-gray-900">Tu situación (opcional)</h2>
           <p className="text-sm text-gray-600 mt-1">
@@ -103,9 +107,12 @@ export function ComparisonPage() {
         <>
           <ComparisonResult result={result} sourceName={offer?.source_name} />
 
-          <WhatIfSimulator purchaseId={purchaseId!} offerId={offerId!} result={result} />
+          {/* El simulador y el guardado son para usar en pantalla: no van al PDF */}
+          <div className="print:hidden">
+            <WhatIfSimulator purchaseId={purchaseId!} offerId={offerId!} result={result} />
+          </div>
 
-          <Card>
+          <Card className="print:hidden">
             <CardHeader>
               <h2 className="text-lg font-semibold text-gray-900">Guardar y compartir</h2>
               <p className="text-sm text-gray-600 mt-1">

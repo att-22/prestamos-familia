@@ -199,3 +199,55 @@ test('el simulador recalcula la oferta con otra entrada y otro plazo', async ({ 
   await expect(scenario).toHaveCount(0);
   await expect(page.getByLabel('Plazo')).toHaveValue('60');
 });
+
+test('guardar el análisis como PDF saca solo el análisis', async ({ page, request }) => {
+  const session = await createSession(request);
+  const purchase = await createPurchase(request, session);
+  const offer = await createOffer(request, session, purchase.id);
+  await signIn(page, session);
+  await page.goto(`/compare/${purchase.id}/${offer.id}`);
+  await expect(page.getByTestId('verdict')).toBeVisible();
+
+  // El botón abre el diálogo de impresión del navegador
+  await page.evaluate(() => {
+    window.print = () => document.body.setAttribute('data-printed', 'yes');
+  });
+  await page.getByRole('button', { name: 'Guardar como PDF' }).click();
+  await expect(page.locator('body')).toHaveAttribute('data-printed', 'yes');
+
+  // Tal como saldrá en el papel: el análisis completo, sin navegación ni controles
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.getByRole('heading', { name: CAR.name })).toBeVisible();
+  await expect(page.getByTestId('verdict')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Cuadro de amortización' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Análisis y alertas' })).toBeVisible();
+  await expect(page.getByText(/Comparativa de financiación ·/)).toBeVisible();
+  for (const hidden of [
+    page.getByRole('navigation', { name: 'Navegación principal' }),
+    page.getByRole('button', { name: 'Guardar como PDF' }),
+    page.getByRole('button', { name: 'Volver', exact: true }),
+    page.getByRole('heading', { name: '¿Y si…?' }),
+    page.getByRole('heading', { name: 'Tu situación (opcional)' }),
+    page.getByRole('button', { name: 'Guardar comparativa' }),
+    page.getByRole('button', { name: 'Ver mes a mes' }),
+  ]) {
+    await expect(hidden).toBeHidden();
+  }
+
+  const pdf = await page.pdf({ format: 'A4' });
+  expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+});
+
+test('el enlace compartido también se puede guardar como PDF', async ({ page, request }) => {
+  const session = await createSession(request);
+  const purchase = await createPurchase(request, session);
+  const offer = await createOffer(request, session, purchase.id);
+  const comparison = await saveComparison(request, session, purchase.id, offer.id);
+  await page.goto(`/c/${comparison.shared_slug}`);
+
+  await expect(page.getByRole('button', { name: 'Guardar como PDF' })).toBeVisible();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.getByRole('heading', { name: CAR.name })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Compartir esta comparativa' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Guardar como PDF' })).toBeHidden();
+});
