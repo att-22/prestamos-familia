@@ -171,7 +171,7 @@ runs the end-to-end tests. All of them run on every pull request; on pushes to
 | Workflow | Job | What it does |
 |----------|-----|--------------|
 | `backend-ci.yml` | `test` | Starts PostgreSQL as a service container, then runs ruff, mypy, the migrations and pytest with coverage |
-| `backend-ci.yml` | `docker` | Builds the production image (multi-stage, runs as a non-root user) to make sure it still builds |
+| `backend-ci.yml` | `docker` | Builds the production image (multi-stage, runs as a non-root user), starts it against PostgreSQL with production settings and checks `/healthz`. On `main` it then publishes the image to GitHub Container Registry as `ghcr.io/att-22/prestamos-familia-backend`, tagged `latest` and `sha-<commit>` |
 | `frontend-ci.yml` | `test` | ESLint, type check, Vitest and a production build |
 | `frontend-ci.yml` | `deploy` | Deploys to Vercel — a preview for pull requests, production on `main` |
 | `e2e.yml` | `e2e` | Starts PostgreSQL, the API and the production build of the frontend, then runs the Playwright suite against them. The report and traces are uploaded when a test fails |
