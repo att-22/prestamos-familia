@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { CAR, PASSWORD, createPurchase, createSession, deleteAccount, registerAccount, signIn, uniqueEmail } from './helpers';
+import {
+  CAR, PASSWORD, confirmDialog, createPurchase, createSession, deleteAccount, registerAccount, signIn, uniqueEmail,
+} from './helpers';
 
 test('las rutas privadas redirigen al login', async ({ page }) => {
   await page.goto('/dashboard');
@@ -115,5 +117,36 @@ test('al cambiar de usuario en el mismo navegador no se ven los datos del anteri
     await expect(page.getByText('Coche del primero')).toHaveCount(0);
   } finally {
     await deleteAccount(request, second);
+  }
+});
+
+test('borrar la propia cuenta desde «Mi cuenta»', async ({ page, request }) => {
+  const email = await registerAccount(request);
+  try {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Contraseña').fill(PASSWORD);
+    await page.getByRole('button', { name: 'Entrar' }).click();
+
+    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Mi cuenta' }).click();
+    await expect(page.getByRole('heading', { name: 'Mi cuenta', exact: true })).toBeVisible();
+    await expect(page.getByText(email)).toBeVisible();
+
+    // Cancelar deja la cuenta como estaba
+    await page.getByRole('button', { name: 'Borrar mi cuenta' }).click();
+    await expect(page.getByRole('alertdialog')).toContainText('No se puede deshacer');
+    await confirmDialog(page, 'Cancelar');
+    await expect(page.getByRole('heading', { name: 'Mi cuenta', exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Borrar mi cuenta' }).click();
+    await confirmDialog(page, 'Borrar mi cuenta');
+
+    await expect(page).toHaveURL(/\/login$/);
+    const login = await request.post(`${process.env.E2E_API_URL ?? 'http://localhost:8000'}/auth/login`, {
+      data: { email, password: PASSWORD },
+    });
+    expect(login.status()).toBe(401);
+  } finally {
+    await deleteAccount(request, email);
   }
 });

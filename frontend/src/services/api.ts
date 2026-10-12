@@ -57,6 +57,7 @@ export const authApi = {
   register: (data: RegisterData) => api.post<AuthResponse>('/auth/register', data),
   devToken: (email: string) => api.post<AuthResponse>('/auth/dev-token', { email }),
   me: () => api.get<User>('/auth/me'),
+  deleteMe: () => api.delete('/auth/me'),
 };
 
 // Admin

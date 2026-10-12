@@ -1,10 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { CAR, CAR_LOAN, createOffer, createPurchase, createSession, saveComparison, signIn } from './helpers';
-
-test.beforeEach(async ({ page }) => {
-  // Los borrados piden confirmación con el diálogo nativo
-  page.on('dialog', dialog => dialog.accept());
-});
+import { CAR, CAR_LOAN, confirmDialog, createOffer, createPurchase, createSession, saveComparison, signIn } from './helpers';
 
 test('crear una compra que no es un vehículo', async ({ page, request }) => {
   await signIn(page, await createSession(request));
@@ -82,7 +77,19 @@ test('borrar una compra elimina sus ofertas y comparativas', async ({ page, requ
   await expect(page.getByText(CAR.name)).toBeVisible();
 
   await page.goto('/dashboard');
-  await page.getByRole('button', { name: `Borrar ${CAR.name}` }).click();
+  const deleteButton = page.getByRole('button', { name: `Borrar ${CAR.name}` });
+
+  // Cancelar (o Escape) no borra nada y devuelve el foco al botón
+  await deleteButton.click();
+  await expect(page.getByRole('alertdialog')).toContainText('Se borrarán también todas sus ofertas y comparativas');
+  await expect(page.getByRole('button', { name: 'Cancelar' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: CAR.name })).toBeVisible();
+  await expect(deleteButton).toBeFocused();
+
+  await deleteButton.click();
+  await confirmDialog(page, 'Borrar');
   await expect(page.getByText('Todavía no hay compras')).toBeVisible();
 
   await page.goto('/comparisons');

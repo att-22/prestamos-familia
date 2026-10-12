@@ -2,6 +2,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Plus, Calculator, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useConfirm } from '@/hooks/useConfirm';
+import { Modal } from '@/components/ui/Modal';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency, formatPercent } from '@/utils/format';
@@ -64,6 +66,7 @@ export function PurchaseDetail() {
   const createOfferMutation = useCreateFinancingOffer();
   const updateOfferMutation = useUpdateFinancingOffer();
   const deleteOfferMutation = useDeleteFinancingOffer();
+  const confirm = useConfirm();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingOffer, setEditingOffer] = useState<FinancingOffer | null>(null);
 
@@ -96,7 +99,7 @@ export function PurchaseDetail() {
   };
 
   const handleDeleteOffer = async (id: string) => {
-    if (confirm('¿Borrar esta oferta de financiación?')) {
+    if (await confirm({ title: '¿Borrar esta oferta de financiación?', confirmLabel: 'Borrar', danger: true })) {
       await deleteOfferMutation.mutateAsync(id);
     }
   };
@@ -166,17 +169,15 @@ export function PurchaseDetail() {
       )}
 
       {(showCreateModal || editingOffer) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <FinancingOfferForm
-              initialData={editingOffer ? toFormData(editingOffer) : undefined}
-              onSubmit={handleSubmit}
-              onCancel={closeModal}
-              isLoading={createOfferMutation.isPending || updateOfferMutation.isPending}
-              submitLabel={editingOffer ? 'Guardar cambios' : 'Crear oferta'}
-            />
-          </div>
-        </div>
+        <Modal onClose={closeModal} aria-label={editingOffer ? 'Editar oferta' : 'Nueva oferta'} className="max-w-3xl">
+          <FinancingOfferForm
+            initialData={editingOffer ? toFormData(editingOffer) : undefined}
+            onSubmit={handleSubmit}
+            onCancel={closeModal}
+            isLoading={createOfferMutation.isPending || updateOfferMutation.isPending}
+            submitLabel={editingOffer ? 'Guardar cambios' : 'Crear oferta'}
+          />
+        </Modal>
       )}
     </div>
   );

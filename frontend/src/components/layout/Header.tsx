@@ -42,7 +42,9 @@ export function Header() {
             
             {user && (
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">{user.name || user.email}</span>
+                <Link to="/account" className="text-sm text-gray-600 hover:text-gray-900 hover:underline" aria-label={`Mi cuenta (${user.name || user.email})`}>
+                  {user.name || user.email}
+                </Link>
                 <Button variant="outline" size="sm" onClick={logout}>
                   <LogOut className="h-4 w-4 mr-1" />
                   Salir
@@ -82,7 +84,14 @@ export function Header() {
               {user && (
                 <div className="pt-2 border-t border-gray-200 flex items-center gap-3 px-3">
                   <User className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm text-gray-600 flex-1">{user.name || user.email}</span>
+                  <Link
+                    to="/account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-sm text-gray-600 flex-1 hover:underline"
+                    aria-label={`Mi cuenta (${user.name || user.email})`}
+                  >
+                    {user.name || user.email}
+                  </Link>
                   <Button variant="outline" size="sm" onClick={() => { logout(); setMobileMenuOpen(false); }}>
                     <LogOut className="h-4 w-4 mr-1" />
                     Salir

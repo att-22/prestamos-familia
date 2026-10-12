@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { PASSWORD, createSession, deleteAccount, signIn, uniqueEmail, type Session } from './helpers';
+import { PASSWORD, confirmDialog, createSession, deleteAccount, signIn, uniqueEmail, type Session } from './helpers';
 
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8000';
 // Debe coincidir con ADMIN_EMAIL del backend (docker-compose.yml y e2e.yml)
@@ -35,7 +35,6 @@ test('el administrador autoriza un email y esa persona puede registrarse', async
   const admin = await adminSession(request);
   // Un dominio distinto de @familia.com, que ya está autorizado por configuración
   const email = uniqueEmail().replace('@familia.com', '@gmail-pruebas.com');
-  page.on('dialog', dialog => dialog.accept());
 
   try {
     const before = await request.post(`${API_URL}/auth/register`, { data: { email, password: PASSWORD } });
@@ -59,6 +58,8 @@ test('el administrador autoriza un email y esa persona puede registrarse', async
     await expect(row.getByText('Cuenta creada')).toBeVisible();
 
     await row.getByRole('button', { name: `Quitar ${email}` }).click();
+    await expect(page.getByRole('alertdialog')).toContainText('Su cuenta seguirá funcionando');
+    await confirmDialog(page, 'Quitar');
     await expect(row).toHaveCount(0);
   } finally {
     await deleteAccount(request, email);
@@ -89,7 +90,6 @@ test('el administrador restablece una contraseña olvidada', async ({ page, requ
   const admin = await adminSession(request);
   const email = uniqueEmail();
   const login = (password: string) => request.post(`${API_URL}/auth/login`, { data: { email, password } });
-  page.on('dialog', dialog => dialog.accept());
 
   try {
     expect((await request.post(`${API_URL}/auth/register`, { data: { email, password: PASSWORD } })).status()).toBe(201);
@@ -99,6 +99,7 @@ test('el administrador restablece una contraseña olvidada', async ({ page, requ
     const accounts = page.getByRole('list', { name: 'Cuentas' });
     const row = accounts.getByRole('listitem').filter({ hasText: email });
     await row.getByRole('button', { name: 'Restablecer contraseña' }).click();
+    await confirmDialog(page, 'Restablecer');
 
     await expect(page.getByRole('status')).toContainText('Contraseña restablecida');
     await expect(row.getByText('Sin contraseña')).toBeVisible();

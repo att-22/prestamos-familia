@@ -9,6 +9,7 @@ import {
   useAddAllowedEmail, useAdminSettings, useAdminUsers, useAllowedEmails, useRemoveAllowedEmail, useResetPassword,
 } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
+import { useConfirm } from '@/hooks/useConfirm';
 import type { AdminUser, AllowedEmail } from '@/types/api';
 
 function errorMessage(error: unknown): string {
@@ -26,6 +27,7 @@ export function AdminPage() {
   const { data: settings } = useAdminSettings();
   const addMutation = useAddAllowedEmail();
   const removeMutation = useRemoveAllowedEmail();
+  const confirm = useConfirm();
   const [entry, setEntry] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -41,10 +43,15 @@ export function AdminPage() {
   };
 
   const handleRemove = async (item: AllowedEmail) => {
-    const warning = item.registered
-      ? `¿Quitar ${item.entry} de la lista? Su cuenta seguirá funcionando; solo afecta a nuevos registros.`
-      : `¿Quitar ${item.entry} de la lista? Ya no podrá crear una cuenta.`;
-    if (item.id && confirm(warning)) {
+    const confirmed = await confirm({
+      title: `¿Quitar ${item.entry} de la lista?`,
+      message: item.registered
+        ? 'Su cuenta seguirá funcionando; solo afecta a nuevos registros.'
+        : 'Ya no podrá crear una cuenta.',
+      confirmLabel: 'Quitar',
+      danger: true,
+    });
+    if (item.id && confirmed) {
       await removeMutation.mutateAsync(item.id);
     }
   };
@@ -123,13 +130,17 @@ function AccountsCard() {
   const { user: me } = useAuth();
   const { data: users = [], isLoading } = useAdminUsers();
   const resetMutation = useResetPassword();
+  const confirm = useConfirm();
   const [notice, setNotice] = useState<{ kind: 'done' | 'error'; text: string } | null>(null);
 
   const handleReset = async (user: AdminUser) => {
-    const warning =
-      `¿Restablecer la contraseña de ${user.email}? No podrá entrar hasta que pulse «Crea tu cuenta» ` +
-      'y elija una nueva. Sus compras y comparativas se conservan.';
-    if (!confirm(warning)) return;
+    const confirmed = await confirm({
+      title: `¿Restablecer la contraseña de ${user.email}?`,
+      message: 'No podrá entrar hasta que pulse «Crea tu cuenta» y elija una nueva. Sus compras y comparativas se conservan.',
+      confirmLabel: 'Restablecer',
+      danger: true,
+    });
+    if (!confirmed) return;
     setNotice(null);
     try {
       await resetMutation.mutateAsync(user.id);

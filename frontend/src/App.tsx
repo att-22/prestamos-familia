@@ -9,6 +9,8 @@ import { ComparisonsList } from '@/pages/ComparisonsList';
 import { PublicComparison } from '@/pages/PublicComparison';
 import { GlossaryPage } from '@/pages/GlossaryPage';
 import { AdminPage } from '@/pages/AdminPage';
+import { AccountPage } from '@/pages/AccountPage';
+import { ConfirmProvider } from '@/hooks/useConfirm';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -66,6 +68,7 @@ function AppRoutes() {
         <Route path="/compare/:purchaseId/:offerId" element={<ComparisonPage />} />
         <Route path="/comparisons" element={<ComparisonsList />} />
         <Route path="/glossary" element={<GlossaryPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
       </Route>
 
@@ -79,7 +82,9 @@ function AppRoutes() {
 export function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ConfirmProvider>
+        <AppRoutes />
+      </ConfirmProvider>
     </AuthProvider>
   );
 }

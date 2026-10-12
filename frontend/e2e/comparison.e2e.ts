@@ -103,7 +103,6 @@ test('el enlace compartido no cambia si después se edita la oferta', async ({ p
   const offer = await createOffer(request, session, purchase.id);
   const comparison = await saveComparison(request, session, purchase.id, offer.id);
   await signIn(page, session);
-  page.on('dialog', dialog => dialog.accept());
 
   await page.goto(`/purchases/${purchase.id}`);
   await page.getByRole('button', { name: 'Editar', exact: true }).click();

@@ -98,3 +98,31 @@ test.describe('en móvil', () => {
     await expect(page.getByRole('heading', { name: 'Glosario financiero' })).toBeVisible();
   });
 });
+
+test('el formulario en modal retiene el foco y se cierra con Escape', async ({ page, request }) => {
+  await signIn(page, await createSession(request));
+  await page.goto('/dashboard');
+  const opener = page.getByRole('button', { name: 'Añadir mi primera compra' });
+  await opener.click();
+
+  const dialog = page.getByRole('dialog', { name: 'Nueva compra' });
+  await expect(dialog).toBeVisible();
+  // El foco entra en el modal y, por muchas veces que se tabule, no sale a la página de debajo
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    const focusInPage = await page.evaluate(() => {
+      const active = document.activeElement;
+      return active !== null && active !== document.body && active.closest('dialog') === null;
+    });
+    expect(focusInPage).toBe(false);
+  }
+
+  // Un clic fuera no cierra el formulario: se perdería lo escrito
+  await page.getByLabel('Nombre').fill('Lavadora');
+  await page.mouse.click(5, 5);
+  await expect(page.getByLabel('Nombre')).toHaveValue('Lavadora');
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+});

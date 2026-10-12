@@ -243,6 +243,8 @@ The app is meant for a closed group, so there is no open sign-up:
   what stops a stranger from claiming an allowed address first. It is mandatory
   in production.
 - **Passwords** are at least 10 characters and stored as bcrypt hashes.
+- **Leaving.** Anyone can delete their own account, with everything saved in
+  it, from the account page.
 - **Brute force.** Five failed attempts for an address from the same IP block
   further attempts for 15 minutes, and so do twenty for an address from any IP:
   behind a proxy the client address comes from a header that can be forged. The
@@ -263,7 +265,6 @@ address without a password and returns 404 when `ENVIRONMENT=production`.
 ## Roadmap
 
 - Exporting a comparison to PDF
-- Deleting your own account from the app (the API already supports it)
 
 ---
 

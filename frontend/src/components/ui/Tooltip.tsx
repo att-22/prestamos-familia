@@ -16,8 +16,9 @@ export function Tooltip({ content, children }: TooltipProps) {
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Se pinta en <body> con posición fija para que ningún contenedor con
-  // overflow (un modal, por ejemplo) lo recorte, y se ajusta a la ventana.
+  // Se pinta fuera de su contenedor, con posición fija, para que ningún overflow lo
+  // recorte, y se ajusta a la ventana. Dentro de un modal va en el propio <dialog>:
+  // lo que queda fuera de él está debajo de la capa superior y no se vería.
   useLayoutEffect(() => {
     if (!isOpen || !triggerRef.current || !tooltipRef.current) return;
     const trigger = triggerRef.current.getBoundingClientRect();
@@ -80,7 +81,7 @@ export function Tooltip({ content, children }: TooltipProps) {
         >
           {content}
         </div>,
-        document.body
+        triggerRef.current?.closest('dialog') ?? document.body
       )}
     </span>
   );
