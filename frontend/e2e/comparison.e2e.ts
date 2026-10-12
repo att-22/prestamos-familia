@@ -36,7 +36,9 @@ test('analizar una oferta y aplicar la situación personal', async ({ page, requ
 
   await expect(page.getByText('Financiar te cuesta de más')).toBeVisible();
   await expect(page.getByText(/30\.279,20\s€/).first()).toBeVisible();
-  await expect(page.getByText('7,37%')).toBeVisible(); // TAE efectiva, por encima de la declarada por la comisión
+  // TAE efectiva: la comisión de apertura y el seguro obligatorio la alejan del 7,2 % declarado
+  await expect(page.getByText('10,22%', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Nuestra TAE calculada \(10,22%\) supera a la declarada \(7,2%\)/)).toBeVisible();
   await expect(page.getByText(/Comisión de apertura del 1,5%: es alta/)).toBeVisible();
   await expect(page.getByText('Cuota / Ingresos mensuales')).toBeHidden();
 

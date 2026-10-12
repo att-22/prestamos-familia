@@ -70,6 +70,7 @@ def _compute(
         savings_after_down_payment=result.savings_after_down_payment,
         user_available_savings=comparison_in.user_available_savings,
         residual_value=result.residual_value,
+        category=purchase.category,
     )
 
     alerts_json = [{"type": a.type.value, "message": a.message, "code": a.code, "params": a.params} for a in alerts]

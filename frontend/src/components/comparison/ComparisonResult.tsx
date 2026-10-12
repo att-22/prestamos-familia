@@ -83,7 +83,7 @@ export function ComparisonResult({ result, sourceName, showDetails = true }: Com
               />
               <Detail
                 label="TAE efectiva"
-                help="TAE real calculada con las cuotas, la cuota final y la comisión de apertura que has introducido. Puede diferir de la TAE declarada."
+                help="TAE real calculada con las cuotas, la cuota final, la comisión de apertura y el seguro obligatorio que has introducido. Puede diferir de la TAE declarada."
                 value={formatPercent(result.effective_annual_rate)}
               />
               <Detail
