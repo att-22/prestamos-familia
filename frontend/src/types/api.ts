@@ -103,6 +103,31 @@ export interface ComparisonResult {
   alerts: Alert[];
 }
 
+export interface OfferSummary {
+  offer_id: string;
+  source_name: string;
+  down_payment: string;
+  monthly_payment: string;
+  months: number;
+  tin: string;
+  tae: string;
+  effective_annual_rate: string;
+  residual_value: string | null;
+  total_payments: string;
+  total_financing_cost: string;
+  // Lo que cuesta de más frente al contado (negativo si financiar sale más barato)
+  total_interest_fees: string;
+  is_cheapest: boolean;
+  has_lowest_payment: boolean;
+}
+
+export interface OfferRanking {
+  purchase_id: string;
+  price_cash: string;
+  // De la más barata a la más cara
+  offers: OfferSummary[];
+}
+
 export interface Comparison {
   id: string;
   user_id: string;

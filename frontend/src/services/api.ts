@@ -3,7 +3,7 @@ import type {
   User, AllowedEmail, AdminSettings, AdminUser,
   Purchase, PurchaseCreate, 
   FinancingOffer, FinancingOfferCreate,
-  Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic
+  Comparison, ComparisonCreate, ComparisonResult, ComparisonPublic, OfferRanking
 } from '@/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -76,6 +76,7 @@ export const purchasesApi = {
   create: (data: PurchaseCreate) => api.post<Purchase>('/purchases', data),
   update: (id: string, data: Partial<PurchaseCreate>) => api.patch<Purchase>(`/purchases/${id}`, data),
   delete: (id: string) => api.delete(`/purchases/${id}`),
+  offerRanking: (id: string) => api.get<OfferRanking>(`/purchases/${id}/offer-ranking`),
 };
 
 // Financing Offers

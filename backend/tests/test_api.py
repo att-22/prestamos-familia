@@ -215,3 +215,46 @@ def test_public_link_hides_alerts_based_on_income_and_savings(client, auth_heade
     assert not public_codes & {"DEBT_RATIO_CRITICAL", "LOW_EMERGENCY_FUND"}
     # Ni los ingresos ni lo que queda de ahorros se pueden leer en la respuesta
     assert "35.57" not in str(public) and "1000.00" not in str(public)
+
+
+def test_offer_ranking_orders_offers_by_total_cost(client, auth_headers):
+    purchase, loan = create_purchase_and_offer(client, auth_headers)
+    # Más entrada y menos plazo: cuota más alta, pero menos intereses
+    short = client.post(
+        "/financing-offers",
+        json={**OFFER, "purchase_id": purchase["id"], "source_name": "Banco Corto", "down_payment": "10000",
+              "months": 36, "monthly_payment": "450", "opening_fee_percent": "0"},
+        headers=auth_headers,
+    ).json()
+
+    response = client.get(f"/purchases/{purchase['id']}/offer-ranking", headers=auth_headers)
+
+    assert response.status_code == 200
+    ranking = response.json()
+    assert ranking["price_cash"] == "25000.00"
+    cheapest, dearest = ranking["offers"]
+    # 10000 + 36 x 450 = 26200
+    assert cheapest == {**cheapest, "offer_id": short["id"], "total_financing_cost": "26200.00",
+                        "total_interest_fees": "1200.00", "is_cheapest": True, "has_lowest_payment": False}
+    # 5000 + 60 x 391.32 + 1.5 % de 20000 = 28779.20
+    assert dearest == {**dearest, "offer_id": loan["id"], "total_financing_cost": "28779.20",
+                       "total_interest_fees": "3779.20", "is_cheapest": False, "has_lowest_payment": True}
+
+
+def test_offer_ranking_of_a_purchase_without_offers_is_empty(client, auth_headers):
+    purchase = client.post("/purchases", json=PURCHASE, headers=auth_headers).json()
+
+    response = client.get(f"/purchases/{purchase['id']}/offer-ranking", headers=auth_headers)
+
+    assert response.status_code == 200
+    assert response.json()["offers"] == []
+
+
+def test_offer_ranking_is_private(client, auth_headers):
+    purchase, _ = create_purchase_and_offer(client, auth_headers)
+    other = client.post("/auth/dev-token", json={"email": "otra@familia.com"}).json()["access_token"]
+
+    response = client.get(f"/purchases/{purchase['id']}/offer-ranking", headers={"Authorization": f"Bearer {other}"})
+
+    assert response.status_code == 404
+    assert client.get(f"/purchases/{purchase['id']}/offer-ranking").status_code == 401
