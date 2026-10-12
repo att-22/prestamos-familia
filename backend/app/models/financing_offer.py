@@ -44,7 +44,7 @@ class FinancingOffer(SQLModel, table=True):
     )
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,
-        sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),
+        sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False, onupdate=datetime.utcnow),
     )
 
     purchase: "Purchase" = Relationship(back_populates="financing_offers")

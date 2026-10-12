@@ -51,10 +51,14 @@ export async function registerAccount(request: APIRequestContext, email = unique
   return email;
 }
 
+/**
+ * Borra una cuenta creada por un test. Entra con el acceso de desarrollo y no con la
+ * contraseña, para que funcione también cuando el test la ha cambiado o restablecido.
+ */
 export async function deleteAccount(request: APIRequestContext, email: string): Promise<void> {
-  const login = await request.post(`${API_URL}/auth/login`, { data: { email, password: PASSWORD } });
-  if (!login.ok()) return;
-  const { access_token } = await login.json();
+  const session = await request.post(`${API_URL}/auth/dev-token`, { data: { email } });
+  if (!session.ok()) return;
+  const { access_token } = await session.json();
   await request.delete(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${access_token}` } });
 }
 

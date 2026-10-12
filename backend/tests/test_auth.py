@@ -180,3 +180,45 @@ def test_production_requires_strong_settings():
     with pytest.raises(ValidationError, match="REGISTRATION_CODE"):
         Settings(**base, JWT_SECRET="s" * 32, REGISTRATION_CODE="")
     assert Settings(**base, JWT_SECRET="s" * 32, REGISTRATION_CODE="codigo").ENVIRONMENT == "production"
+
+
+def change_password(client, headers, current=PASSWORD, new="otra-clave-distinta-2"):
+    return client.post("/auth/me/password", json={"current_password": current, "new_password": new}, headers=headers)
+
+
+def test_change_password_replaces_the_old_one(client):
+    headers = {"Authorization": f"Bearer {register(client).json()['access_token']}"}
+
+    assert change_password(client, headers).status_code == 204
+
+    assert login(client).status_code == 401
+    assert login(client, password="otra-clave-distinta-2").status_code == 200
+
+
+def test_change_password_requires_the_current_one(client):
+    headers = {"Authorization": f"Bearer {register(client).json()['access_token']}"}
+
+    wrong = change_password(client, headers, current="no-es-esta-clave")
+
+    # 400: la sesión sigue siendo válida, así que la app no debe cerrarla
+    assert wrong.status_code == 400
+    assert login(client).status_code == 200
+    assert client.post("/auth/me/password", json={"current_password": PASSWORD, "new_password": "x"}).status_code == 401
+
+
+def test_change_password_validates_the_new_one(client):
+    headers = {"Authorization": f"Bearer {register(client).json()['access_token']}"}
+
+    assert change_password(client, headers, new="corta").status_code == 422
+    assert change_password(client, headers, new="ñ" * 40).status_code == 422  # más de 72 bytes
+    assert change_password(client, headers, new=PASSWORD).status_code == 400
+    assert login(client).status_code == 200
+
+
+def test_change_password_is_rate_limited(client):
+    headers = {"Authorization": f"Bearer {register(client).json()['access_token']}"}
+    for _ in range(auth_limiter.max_attempts):
+        assert change_password(client, headers, current="no-es-esta-clave").status_code == 400
+
+    # Con la sesión robada no se puede probar contraseñas sin límite
+    assert change_password(client, headers).status_code == 429

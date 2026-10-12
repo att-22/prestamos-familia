@@ -46,6 +46,18 @@ class RegisterRequest(BaseModel):
         return value
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=MIN_PASSWORD_LENGTH)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > MAX_PASSWORD_BYTES:
+            raise ValueError(f"La contraseña no puede superar los {MAX_PASSWORD_BYTES} bytes")
+        return value
+
+
 class DevTokenRequest(BaseModel):
     email: EmailStr
 

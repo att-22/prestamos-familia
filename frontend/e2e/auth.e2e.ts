@@ -150,3 +150,41 @@ test('borrar la propia cuenta desde «Mi cuenta»', async ({ page, request }) =>
     await deleteAccount(request, email);
   }
 });
+
+test('cambiar la contraseña desde «Mi cuenta»', async ({ page, request }) => {
+  const email = await registerAccount(request);
+  const newPassword = 'otra-clave-distinta-2';
+  const login = (password: string) =>
+    request.post(`${process.env.E2E_API_URL ?? 'http://localhost:8000'}/auth/login`, { data: { email, password } });
+  try {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Contraseña').fill(PASSWORD);
+    await page.getByRole('button', { name: 'Entrar' }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await page.goto('/account');
+
+    // Una contraseña actual equivocada avisa sin cerrar la sesión
+    await page.getByLabel('Contraseña actual').fill('no-es-esta-clave');
+    await page.getByLabel('Nueva contraseña', { exact: true }).fill(newPassword);
+    await page.getByLabel('Repite la nueva contraseña').fill(newPassword);
+    await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
+    await expect(page.getByText('La contraseña actual no es correcta.')).toBeVisible();
+    await expect(page).toHaveURL(/\/account$/);
+
+    await page.getByLabel('Repite la nueva contraseña').fill('no-coincide-con-la-otra');
+    await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
+    await expect(page.getByText('Las contraseñas no coinciden')).toBeVisible();
+
+    await page.getByLabel('Contraseña actual').fill(PASSWORD);
+    await page.getByLabel('Repite la nueva contraseña').fill(newPassword);
+    await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
+    await expect(page.getByRole('status')).toContainText('Contraseña cambiada');
+    await expect(page.getByLabel('Contraseña actual')).toHaveValue('');
+
+    expect((await login(PASSWORD)).status()).toBe(401);
+    expect((await login(newPassword)).status()).toBe(200);
+  } finally {
+    await deleteAccount(request, email);
+  }
+});

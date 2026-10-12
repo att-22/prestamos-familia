@@ -242,7 +242,8 @@ The app is meant for a closed group, so there is no open sign-up:
   secret handed out by whoever runs the app. Emails are not verified, so this is
   what stops a stranger from claiming an allowed address first. It is mandatory
   in production.
-- **Passwords** are at least 10 characters and stored as bcrypt hashes.
+- **Passwords** are at least 10 characters and stored as bcrypt hashes. They
+  can be changed from the account page, which asks for the current one.
 - **Leaving.** Anyone can delete their own account, with everything saved in
   it, from the account page.
 - **Brute force.** Five failed attempts for an address from the same IP block
