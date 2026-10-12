@@ -299,3 +299,14 @@ def test_simulating_other_conditions_for_an_offer(client, auth_headers):
     stranger = client.post("/comparisons/simulate", json={**body, "down_payment": "0", "months": 12},
                            headers={"Authorization": f"Bearer {other}"})
     assert stranger.status_code == 404
+
+
+def test_editing_refreshes_updated_at(client, auth_headers):
+    purchase, offer = create_purchase_and_offer(client, auth_headers)
+
+    edited_purchase = client.patch(f"/purchases/{purchase['id']}", json={"price_cash": "26000"}, headers=auth_headers).json()
+    edited_offer = client.patch(f"/financing-offers/{offer['id']}", json={"months": 48}, headers=auth_headers).json()
+
+    for before, after in ((purchase, edited_purchase), (offer, edited_offer)):
+        assert after["created_at"] == before["created_at"]
+        assert after["updated_at"] > before["updated_at"]

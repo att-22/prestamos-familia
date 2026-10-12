@@ -57,6 +57,8 @@ export const authApi = {
   register: (data: RegisterData) => api.post<AuthResponse>('/auth/register', data),
   devToken: (email: string) => api.post<AuthResponse>('/auth/dev-token', { email }),
   me: () => api.get<User>('/auth/me'),
+  changePassword: (current_password: string, new_password: string) =>
+    api.post('/auth/me/password', { current_password, new_password }),
   deleteMe: () => api.delete('/auth/me'),
 };
 

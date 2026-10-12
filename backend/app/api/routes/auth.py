@@ -11,6 +11,7 @@ from app.models.user import User
 from app.schemas.user import (
     DevTokenRequest,
     LoginRequest,
+    PasswordChange,
     RegisterRequest,
     TokenResponse,
     UserRead,
@@ -151,6 +152,30 @@ async def update_me(
     session.commit()
     session.refresh(current_user)
     return current_user
+
+
+@router.post("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(
+    data: PasswordChange,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Cambia la contraseña conociendo la actual: una sesión abierta en otro equipo no basta."""
+    key = _limiter_key(request, current_user.email)
+    _check_not_blocked(key, current_user.email)
+
+    if not verify_password(data.current_password, current_user.password_hash):
+        _record_failure(key, current_user.email)
+        # 400 y no 401: la sesión es válida, lo que falla es la contraseña escrita
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La contraseña actual no es correcta.")
+    if data.new_password == data.current_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La nueva contraseña debe ser distinta de la actual.")
+
+    current_user.password_hash = hash_password(data.new_password)
+    session.add(current_user)
+    session.commit()
+    auth_limiter.reset(key)
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
