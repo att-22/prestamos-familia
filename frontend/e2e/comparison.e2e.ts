@@ -152,3 +152,49 @@ test('con varias ofertas se comparan lado a lado y se señala la más barata', a
   await rows.nth(0).getByRole('link', { name: 'Banco Corto' }).click();
   await expect(page.getByTestId('verdict')).toContainText(/Financiar con Banco Corto te cuesta 1\.200,00\s€ más que pagar al contado/);
 });
+
+test('el cuadro de amortización reparte cada cuota entre intereses y capital', async ({ page, request }) => {
+  const session = await createSession(request);
+  const purchase = await createPurchase(request, session);
+  const offer = await createOffer(request, session, purchase.id);
+  await signIn(page, session);
+  await page.goto(`/compare/${purchase.id}/${offer.id}`);
+
+  const card = page.getByTestId('amortization');
+  await expect(card.getByText(/De la primera cuota, 108,33\s€ son intereses/)).toBeVisible();
+  await expect(card.getByRole('img', { name: /Reparto de cada cuota/ })).toBeVisible();
+
+  // Por años: 5 filas, y los intereses suman lo pagado de más sobre los 20.000 € prestados
+  const rows = card.locator('tbody tr');
+  await expect(rows).toHaveCount(5);
+  await expect(card.locator('tfoot')).toContainText(/3\.479,20\s€/);
+  await expect(rows.last()).toContainText(/0,00\s€/);
+
+  await card.getByRole('button', { name: 'Ver mes a mes' }).click();
+  await expect(rows).toHaveCount(60);
+  await expect(rows.first()).toContainText(/282,99\s€/);
+});
+
+test('el simulador recalcula la oferta con otra entrada y otro plazo', async ({ page, request }) => {
+  const session = await createSession(request);
+  const purchase = await createPurchase(request, session);
+  const offer = await createOffer(request, session, purchase.id);
+  await signIn(page, session);
+  await page.goto(`/compare/${purchase.id}/${offer.id}`);
+
+  await expect(page.getByText(/Ahora ves la oferta tal como es: 391,32\s€ al mes/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Volver a la oferta' })).toBeDisabled();
+
+  await page.getByLabel('Entrada').fill('10000');
+  await page.getByLabel('Plazo').fill('36');
+
+  // 15.000 € al mismo 6,5 % a 36 meses; el seguro de 300 €/año son 900 €
+  const scenario = page.getByTestId('scenario');
+  await expect(scenario).toContainText(/459,73\s€/);
+  await expect(scenario).toContainText(/27\.675,28\s€/);
+  await expect(scenario).toContainText(/acabarías pagando 2\.603,92\s€ menos/);
+
+  await page.getByRole('button', { name: 'Volver a la oferta' }).click();
+  await expect(scenario).toHaveCount(0);
+  await expect(page.getByLabel('Plazo')).toHaveValue('60');
+});

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { purchasesApi, financingOffersApi, comparisonsApi, adminApi } from '@/services/api';
-import type { PurchaseCreate, FinancingOfferCreate, ComparisonCreate } from '@/types/api';
+import type { PurchaseCreate, FinancingOfferCreate, ComparisonCreate, ScenarioRequest } from '@/types/api';
 
 // Purchases
 export function usePurchases() {
@@ -114,6 +114,15 @@ export function useComparisonPreview(data: ComparisonCreate) {
     queryKey: ['comparisons', 'calculate', data],
     queryFn: () => comparisonsApi.calculate(data).then(r => r.data),
     enabled: !!data.purchase_id && !!data.financing_offer_id,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useScenario(data: ScenarioRequest, enabled: boolean) {
+  return useQuery({
+    queryKey: ['comparisons', 'simulate', data],
+    queryFn: () => comparisonsApi.simulate(data).then(r => r.data),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }

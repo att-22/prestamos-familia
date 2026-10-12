@@ -9,8 +9,16 @@ from app.core.database import get_session
 from app.models.comparison import Comparison
 from app.models.purchase import Purchase
 from app.models.financing_offer import FinancingOffer
-from app.schemas.comparison import ComparisonCreate, ComparisonRead, ComparisonResult, ComparisonPublic
+from app.schemas.comparison import (
+    ComparisonCreate,
+    ComparisonPublic,
+    ComparisonRead,
+    ComparisonResult,
+    ScenarioRequest,
+    ScenarioResult,
+)
 from app.services.calculations import calculate_financing_comparison, CalculationResult
+from app.services.amortization import max_down_payment, schedule_for, simulate
 from app.services.offer_analysis import to_calculation_input
 from app.services.alerts import generate_alerts, PERSONAL_ALERT_CODES
 from app.api.deps import get_current_user_id
@@ -23,7 +31,7 @@ def generate_slug() -> str:
 
 
 def _load_purchase_and_offer(
-    comparison_in: ComparisonCreate, user_id: UUID, session: Session
+    comparison_in: ComparisonCreate | ScenarioRequest, user_id: UUID, session: Session
 ) -> tuple[Purchase, FinancingOffer]:
     purchase = session.get(Purchase, comparison_in.purchase_id)
     if not purchase or purchase.user_id != user_id:
@@ -91,7 +99,34 @@ async def calculate_comparison(
 ):
     purchase, offer = _load_purchase_and_offer(comparison_in, user_id, session)
     result, alerts_json = _compute(purchase, offer, comparison_in)
-    return ComparisonResult(**asdict(result), alerts=alerts_json)
+    schedule = schedule_for(to_calculation_input(purchase, offer))
+    return ComparisonResult(**asdict(result), alerts=alerts_json, amortization=asdict(schedule))
+
+
+@router.post("/simulate", response_model=ScenarioResult)
+async def simulate_scenario(
+    scenario_in: ScenarioRequest,
+    user_id: UUID = Depends(get_current_user_id),
+    session: Session = Depends(get_session),
+):
+    """Qué costaría la misma oferta con otra entrada y otro plazo, manteniendo su tipo de interés."""
+    purchase, offer = _load_purchase_and_offer(scenario_in, user_id, session)
+    calc_input = to_calculation_input(purchase, offer)
+    if scenario_in.down_payment > max_down_payment(calc_input):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La entrada no puede superar lo que queda por pagar a plazos.",
+        )
+
+    result, annual_rate = simulate(calc_input, scenario_in.down_payment, scenario_in.months)
+    return ScenarioResult(
+        down_payment=result.down_payment,
+        months=result.months,
+        monthly_payment=result.monthly_payment,
+        total_financing_cost=result.total_financing_cost,
+        total_interest_fees=result.total_interest_fees,
+        annual_rate=annual_rate,
+    )
 
 
 @router.post("", response_model=ComparisonRead, status_code=status.HTTP_201_CREATED)
