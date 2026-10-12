@@ -260,8 +260,8 @@ function OfferCard({ offer, summary, onEdit, onDelete }: {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <Card><CardContent className="h-8 w-1/3 bg-gray-200 rounded" /></Card>
-      <Card><CardContent className="h-20 bg-gray-200 rounded" /></Card>
+      <Card><CardContent className="h-8 w-1/3 bg-gray-200 rounded-sm" /></Card>
+      <Card><CardContent className="h-20 bg-gray-200 rounded-sm" /></Card>
       <div className="space-y-4">
         {[1, 2].map(i => <OfferSkeleton key={i} />)}
       </div>
@@ -273,11 +273,11 @@ function OfferSkeleton() {
   return (
     <Card>
       <CardContent className="space-y-4">
-        <div className="h-4 w-1/4 bg-gray-200 rounded" />
+        <div className="h-4 w-1/4 bg-gray-200 rounded-sm" />
         <div className="grid gap-4 sm:grid-cols-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-gray-200 rounded" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-gray-200 rounded-sm" />)}
         </div>
-        <div className="h-10 bg-gray-200 rounded" />
+        <div className="h-10 bg-gray-200 rounded-sm" />
       </CardContent>
     </Card>
   );

@@ -75,7 +75,7 @@ export function Tooltip({ content, children }: TooltipProps) {
         <div
           ref={tooltipRef}
           role="tooltip"
-          className="fixed z-[60] max-w-xs px-3 py-2 text-sm font-normal text-white bg-gray-900 rounded-lg shadow-lg pointer-events-none"
+          className="fixed z-60 max-w-xs px-3 py-2 text-sm font-normal text-white bg-gray-900 rounded-lg shadow-lg pointer-events-none"
           style={{
             top: coords?.top ?? 0,
             left: coords?.left ?? 0,
