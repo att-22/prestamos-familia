@@ -63,7 +63,7 @@ def _token_response(user: User) -> TokenResponse:
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(data: RegisterRequest, request: Request, session: Session = Depends(get_session)):
+def register(data: RegisterRequest, request: Request, session: Session = Depends(get_session)):
     """Crea la cuenta de un email autorizado. Hace falta el código de registro si está configurado."""
     email = data.email.lower()
     key = _limiter_key(request, email)
@@ -97,7 +97,7 @@ async def register(data: RegisterRequest, request: Request, session: Session = D
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: LoginRequest, request: Request, session: Session = Depends(get_session)):
+def login(data: LoginRequest, request: Request, session: Session = Depends(get_session)):
     email = data.email.lower()
     key = _limiter_key(request, email)
     _check_not_blocked(key, email)
@@ -116,7 +116,7 @@ async def login(data: LoginRequest, request: Request, session: Session = Depends
 
 
 @router.post("/dev-token", response_model=TokenResponse)
-async def dev_token(data: DevTokenRequest, session: Session = Depends(get_session)):
+def dev_token(data: DevTokenRequest, session: Session = Depends(get_session)):
     """
     SOLO DESARROLLO Y TESTS: entra como cualquier email sin contraseña.
     """
@@ -136,12 +136,12 @@ async def dev_token(data: DevTokenRequest, session: Session = Depends(get_sessio
 
 
 @router.get("/me", response_model=UserRead)
-async def get_me(current_user: User = Depends(get_current_user)):
+def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
 @router.patch("/me", response_model=UserRead)
-async def update_me(
+def update_me(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
@@ -155,7 +155,7 @@ async def update_me(
 
 
 @router.post("/me/password", status_code=status.HTTP_204_NO_CONTENT)
-async def change_password(
+def change_password(
     data: PasswordChange,
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -179,7 +179,7 @@ async def change_password(
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_me(
+def delete_me(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):

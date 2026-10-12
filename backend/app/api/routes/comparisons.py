@@ -93,7 +93,7 @@ def _snapshot(purchase: Purchase, offer: FinancingOffer, result: CalculationResu
 
 
 @router.post("/calculate", response_model=ComparisonResult)
-async def calculate_comparison(
+def calculate_comparison(
     comparison_in: ComparisonCreate,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -105,7 +105,7 @@ async def calculate_comparison(
 
 
 @router.post("/simulate", response_model=ScenarioResult)
-async def simulate_scenario(
+def simulate_scenario(
     scenario_in: ScenarioRequest,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -115,7 +115,7 @@ async def simulate_scenario(
     calc_input = to_calculation_input(purchase, offer)
     if scenario_in.down_payment > max_down_payment(calc_input):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="La entrada no puede superar lo que queda por pagar a plazos.",
         )
 
@@ -131,7 +131,7 @@ async def simulate_scenario(
 
 
 @router.post("", response_model=ComparisonRead, status_code=status.HTTP_201_CREATED)
-async def create_comparison(
+def create_comparison(
     comparison_in: ComparisonCreate,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -161,7 +161,7 @@ async def create_comparison(
 
 
 @router.get("", response_model=List[ComparisonRead])
-async def list_comparisons(
+def list_comparisons(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
     skip: int = Query(0, ge=0),
@@ -178,7 +178,7 @@ async def list_comparisons(
 
 
 @router.get("/{comparison_id}", response_model=ComparisonRead)
-async def get_comparison(
+def get_comparison(
     comparison_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -192,7 +192,7 @@ async def get_comparison(
 
 
 @router.get("/public/{slug}", response_model=ComparisonPublic)
-async def get_public_comparison(
+def get_public_comparison(
     slug: str,
     session: Session = Depends(get_session),
 ):
@@ -213,7 +213,7 @@ async def get_public_comparison(
 
 
 @router.delete("/{comparison_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_comparison(
+def delete_comparison(
     comparison_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),

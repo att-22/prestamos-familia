@@ -13,7 +13,7 @@ router = APIRouter(prefix="/financing-offers", tags=["financing-offers"])
 
 
 @router.post("", response_model=FinancingOfferRead, status_code=status.HTTP_201_CREATED)
-async def create_financing_offer(
+def create_financing_offer(
     offer_in: FinancingOfferCreate,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -32,7 +32,7 @@ async def create_financing_offer(
 
 
 @router.get("", response_model=List[FinancingOfferRead])
-async def list_financing_offers(
+def list_financing_offers(
     purchase_id: UUID | None = Query(None),
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -50,7 +50,7 @@ async def list_financing_offers(
 
 
 @router.get("/{offer_id}", response_model=FinancingOfferRead)
-async def get_financing_offer(
+def get_financing_offer(
     offer_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -66,7 +66,7 @@ async def get_financing_offer(
 
 
 @router.patch("/{offer_id}", response_model=FinancingOfferRead)
-async def update_financing_offer(
+def update_financing_offer(
     offer_id: UUID,
     offer_in: FinancingOfferUpdate,
     user_id: UUID = Depends(get_current_user_id),
@@ -90,7 +90,7 @@ async def update_financing_offer(
 
 
 @router.delete("/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_financing_offer(
+def delete_financing_offer(
     offer_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/purchases", tags=["purchases"])
 
 
 @router.post("", response_model=PurchaseRead, status_code=status.HTTP_201_CREATED)
-async def create_purchase(
+def create_purchase(
     purchase_in: PurchaseCreate,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -29,7 +29,7 @@ async def create_purchase(
 
 
 @router.get("", response_model=List[PurchaseRead])
-async def list_purchases(
+def list_purchases(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
     skip: int = Query(0, ge=0),
@@ -46,7 +46,7 @@ async def list_purchases(
 
 
 @router.get("/{purchase_id}", response_model=PurchaseRead)
-async def get_purchase(
+def get_purchase(
     purchase_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -60,7 +60,7 @@ async def get_purchase(
 
 
 @router.get("/{purchase_id}/offer-ranking", response_model=OfferRanking)
-async def rank_offers(
+def rank_offers(
     purchase_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -106,7 +106,7 @@ async def rank_offers(
 
 
 @router.patch("/{purchase_id}", response_model=PurchaseRead)
-async def update_purchase(
+def update_purchase(
     purchase_id: UUID,
     purchase_in: PurchaseUpdate,
     user_id: UUID = Depends(get_current_user_id),
@@ -128,7 +128,7 @@ async def update_purchase(
 
 
 @router.delete("/{purchase_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_purchase(
+def delete_purchase(
     purchase_id: UUID,
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),

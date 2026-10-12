@@ -7,7 +7,7 @@ router = APIRouter(tags=["health"])
 
 
 @router.get("/healthz")
-async def health_check(session: Session = Depends(get_session)):
+def health_check(session: Session = Depends(get_session)):
     """Health check de la plataforma: 503 si no hay base de datos, para que no enrute tráfico."""
     try:
         session.connection().execute(text("SELECT 1"))

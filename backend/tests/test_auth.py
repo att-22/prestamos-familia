@@ -166,10 +166,12 @@ def test_allowed_emails_accept_addresses_and_domains():
     assert not Settings(DATABASE_URL="postgresql://x", JWT_SECRET="x", ALLOWED_EMAILS="").is_email_allowed("ana@ejemplo.com")
 
 
-def test_database_url_accepts_the_postgres_scheme():
-    settings = Settings(DATABASE_URL="postgres://user:pw@host/db?sslmode=require", JWT_SECRET="x")
+def test_database_url_always_uses_the_psycopg_driver():
+    for url in ("postgres://user:pw@host/db?sslmode=require", "postgresql://user:pw@host/db?sslmode=require"):
+        assert Settings(DATABASE_URL=url, JWT_SECRET="x").DATABASE_URL == "postgresql+psycopg://user:pw@host/db?sslmode=require"
 
-    assert settings.DATABASE_URL == "postgresql://user:pw@host/db?sslmode=require"
+    explicit = "postgresql+psycopg2://user:pw@host/db"
+    assert Settings(DATABASE_URL=explicit, JWT_SECRET="x").DATABASE_URL == explicit
 
 
 def test_production_requires_strong_settings():

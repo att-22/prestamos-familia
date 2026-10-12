@@ -1,3 +1,7 @@
+import inspect
+
+from fastapi.routing import APIRoute
+
 from app.core.database import get_session
 from app.main import app
 
@@ -310,3 +314,18 @@ def test_editing_refreshes_updated_at(client, auth_headers):
     for before, after in ((purchase, edited_purchase), (offer, edited_offer)):
         assert after["created_at"] == before["created_at"]
         assert after["updated_at"] > before["updated_at"]
+
+
+def test_handlers_that_use_the_database_do_not_block_the_event_loop():
+    """La sesión es síncrona: un handler `async def` que la use bloquea a todos los demás.
+
+    Declarados con `def`, FastAPI los ejecuta en un hilo aparte.
+    """
+    def uses_session(dependant) -> bool:
+        return any(dep.call is get_session or uses_session(dep) for dep in dependant.dependencies)
+
+    blocking = [
+        route.path for route in app.routes
+        if isinstance(route, APIRoute) and uses_session(route.dependant) and inspect.iscoroutinefunction(route.endpoint)
+    ]
+    assert blocking == []
