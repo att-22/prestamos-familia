@@ -41,3 +41,13 @@ class AllowedEmailRead(BaseModel):
 class AdminSettings(BaseModel):
     registration_code: Optional[str]
     admin_email: Optional[str]
+
+
+class AdminUserRead(BaseModel):
+    id: UUID
+    email: str
+    name: Optional[str]
+    is_admin: bool
+    # False tras restablecer la contraseña, hasta que la persona vuelve a crear su cuenta
+    has_password: bool
+    created_at: datetime

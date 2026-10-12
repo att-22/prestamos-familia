@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 
 from app.core.config import get_settings
@@ -62,6 +64,8 @@ def test_admin_endpoints_are_forbidden_to_everyone_else(client, admin_headers):
     for headers, expected in ((user_headers, 403), ({}, 401)):
         assert client.get("/admin/allowed-emails", headers=headers).status_code == expected
         assert client.get("/admin/settings", headers=headers).status_code == expected
+        assert client.get("/admin/users", headers=headers).status_code == expected
+        assert client.post(f"/admin/users/{uuid4()}/reset-password", headers=headers).status_code == expected
         assert client.post("/admin/allowed-emails", json={"entry": "x@gmail.com"}, headers=headers).status_code == expected
 
 
@@ -130,3 +134,51 @@ def test_settings_expose_the_registration_code_to_the_admin(client, admin_header
 
     monkeypatch.setattr(get_settings(), "REGISTRATION_CODE", "codigo-familiar")
     assert client.get("/admin/settings", headers=admin_headers).json()["registration_code"] == "codigo-familiar"
+
+
+def users_by_email(client, headers):
+    return {u["email"]: u for u in client.get("/admin/users", headers=headers).json()}
+
+
+def test_users_are_listed_without_exposing_password_hashes(client, admin_headers):
+    add(client, admin_headers, "madre@gmail.com")
+    register(client, "madre@gmail.com", name="Madre")
+
+    response = client.get("/admin/users", headers=admin_headers)
+
+    assert "password_hash" not in response.text
+    users = {u["email"]: u for u in response.json()}
+    assert users[ADMIN]["is_admin"] is True
+    assert users["madre@gmail.com"] == {**users["madre@gmail.com"], "name": "Madre", "is_admin": False, "has_password": True}
+
+
+def test_resetting_a_password_lets_the_person_choose_a_new_one_and_keeps_their_data(client, admin_headers):
+    add(client, admin_headers, "madre@gmail.com")
+    madre = headers_for(register(client, "madre@gmail.com"))
+    client.post("/purchases", json={"name": "Sofá", "price_cash": "900", "category": "other"}, headers=madre)
+    user_id = users_by_email(client, admin_headers)["madre@gmail.com"]["id"]
+
+    reset = client.post(f"/admin/users/{user_id}/reset-password", headers=admin_headers)
+
+    assert reset.status_code == 200 and reset.json()["has_password"] is False
+    assert client.post("/auth/login", json={"email": "madre@gmail.com", "password": PASSWORD}).status_code == 401
+
+    new_password = "otra-clave-distinta-2"
+    again = client.post("/auth/register", json={"email": "madre@gmail.com", "password": new_password})
+    assert again.status_code == 201
+    assert client.post("/auth/login", json={"email": "madre@gmail.com", "password": new_password}).status_code == 200
+    assert [p["name"] for p in client.get("/purchases", headers=headers_for(again)).json()] == ["Sofá"]
+
+
+def test_reset_is_refused_when_it_would_lock_someone_out(client, admin_headers):
+    entry = add(client, admin_headers, "primo@gmail.com").json()
+    register(client, "primo@gmail.com")
+    users = users_by_email(client, admin_headers)
+    client.delete(f"/admin/allowed-emails/{entry['id']}", headers=admin_headers)
+
+    # Ya no está en la lista: sin contraseña no podría volver a registrarse
+    assert client.post(f"/admin/users/{users['primo@gmail.com']['id']}/reset-password", headers=admin_headers).status_code == 409
+    # El administrador no se deja fuera a sí mismo
+    assert client.post(f"/admin/users/{users[ADMIN]['id']}/reset-password", headers=admin_headers).status_code == 400
+    assert client.post(f"/admin/users/{uuid4()}/reset-password", headers=admin_headers).status_code == 404
+    assert client.post("/auth/login", json={"email": "primo@gmail.com", "password": PASSWORD}).status_code == 200

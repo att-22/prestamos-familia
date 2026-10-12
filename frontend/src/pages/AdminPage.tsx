@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
-import { AtSign, Mail, Plus, Trash2 } from 'lucide-react';
+import { AtSign, KeyRound, Mail, Plus, Trash2, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { useAddAllowedEmail, useAdminSettings, useAllowedEmails, useRemoveAllowedEmail } from '@/hooks/useApi';
-import type { AllowedEmail } from '@/types/api';
+import {
+  useAddAllowedEmail, useAdminSettings, useAdminUsers, useAllowedEmails, useRemoveAllowedEmail, useResetPassword,
+} from '@/hooks/useApi';
+import { useAuth } from '@/hooks/useAuth';
+import type { AdminUser, AllowedEmail } from '@/types/api';
 
 function errorMessage(error: unknown): string {
   if (isAxiosError(error)) {
@@ -15,7 +18,7 @@ function errorMessage(error: unknown): string {
     // Los errores de validación llegan como lista; el mensaje útil va tras "Value error, "
     if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg.replace(/^Value error, /, '');
   }
-  return 'No se ha podido guardar. Inténtalo de nuevo.';
+  return 'No se ha podido completar. Inténtalo de nuevo.';
 }
 
 export function AdminPage() {
@@ -102,7 +105,7 @@ export function AdminPage() {
           ) : entries.length === 0 ? (
             <p className="text-sm text-gray-500">Todavía no hay nadie autorizado.</p>
           ) : (
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-gray-200" aria-label="Correos autorizados">
               {entries.map(item => (
                 <EntryRow key={`${item.source}-${item.entry}`} item={item} onRemove={handleRemove} />
               ))}
@@ -110,7 +113,87 @@ export function AdminPage() {
           )}
         </CardContent>
       </Card>
+
+      <AccountsCard />
     </div>
+  );
+}
+
+function AccountsCard() {
+  const { user: me } = useAuth();
+  const { data: users = [], isLoading } = useAdminUsers();
+  const resetMutation = useResetPassword();
+  const [notice, setNotice] = useState<{ kind: 'done' | 'error'; text: string } | null>(null);
+
+  const handleReset = async (user: AdminUser) => {
+    const warning =
+      `¿Restablecer la contraseña de ${user.email}? No podrá entrar hasta que pulse «Crea tu cuenta» ` +
+      'y elija una nueva. Sus compras y comparativas se conservan.';
+    if (!confirm(warning)) return;
+    setNotice(null);
+    try {
+      await resetMutation.mutateAsync(user.id);
+      setNotice({
+        kind: 'done',
+        text: `Contraseña restablecida. Dile a ${user.email} que pulse «Crea tu cuenta» y elija una nueva con el código de invitación.`,
+      });
+    } catch (error) {
+      setNotice({ kind: 'error', text: errorMessage(error) });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-lg font-semibold text-gray-900">Cuentas</h2>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-gray-600">
+          Si alguien olvida su contraseña, restablécela aquí: volverá a elegir una desde «Crea tu cuenta», sin perder
+          sus datos.
+        </p>
+        {notice && (
+          <p
+            role={notice.kind === 'error' ? 'alert' : 'status'}
+            className={`rounded-lg px-3 py-2 text-sm ${notice.kind === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-800'}`}
+          >
+            {notice.text}
+          </p>
+        )}
+        {isLoading ? (
+          <div className="h-24 animate-pulse rounded-lg bg-gray-100" />
+        ) : (
+          <ul className="divide-y divide-gray-200" aria-label="Cuentas">
+            {users.map(user => (
+              <li key={user.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <UserIcon className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-gray-900">{user.email}</p>
+                    {user.name && <p className="truncate text-sm text-gray-500">{user.name}</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {user.is_admin && <Badge variant="info">Administrador</Badge>}
+                  {!user.has_password && <Badge variant="warning">Sin contraseña</Badge>}
+                  {user.has_password && user.id !== me?.id && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleReset(user)}
+                      disabled={resetMutation.isPending}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Restablecer contraseña
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
