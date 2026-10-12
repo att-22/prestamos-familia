@@ -4,8 +4,24 @@ export interface User {
   id: string;
   email: string;
   name: string | null;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface AllowedEmail {
+  // Las entradas fijadas en la configuración del servidor no tienen id ni se pueden quitar
+  id: string | null;
+  entry: string;
+  source: 'admin' | 'config';
+  is_domain: boolean;
+  registered: boolean;
+  created_at: string | null;
+}
+
+export interface AdminSettings {
+  registration_code: string | null;
+  admin_email: string | null;
 }
 
 export type PurchaseCategory = 'vehicle' | 'home' | 'renovation' | 'electronics' | 'other';

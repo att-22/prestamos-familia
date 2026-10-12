@@ -17,6 +17,7 @@ from app.schemas.user import (
     UserUpdate,
 )
 from app.api.deps import get_current_user
+from app.services.access import is_admin_email, is_registration_allowed
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 settings = get_settings()
@@ -38,6 +39,15 @@ def _check_not_blocked(key: str) -> None:
         )
 
 
+def _grant_admin_if_configured(user: User, session: Session) -> None:
+    """El email de ADMIN_EMAIL es administrador aunque la cuenta existiera de antes."""
+    if not user.is_admin and is_admin_email(user.email):
+        user.is_admin = True
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
+
 def _token_response(user: User) -> TokenResponse:
     token = create_access_token(str(user.id), user.email)
     return TokenResponse(access_token=token, user=UserRead.model_validate(user))
@@ -54,7 +64,7 @@ async def register(data: RegisterRequest, request: Request, session: Session = D
         data.registration_code.encode("utf-8"), settings.REGISTRATION_CODE.encode("utf-8")
     )
     # Mismo error para email no autorizado y código incorrecto: no se revela cuál falla
-    if not settings.is_email_allowed(email) or not code_ok:
+    if not is_registration_allowed(session, email) or not code_ok:
         auth_limiter.record_failure(key)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -68,6 +78,7 @@ async def register(data: RegisterRequest, request: Request, session: Session = D
     if user is None:
         user = User(email=email, name=data.name or email.split("@")[0].capitalize())
     user.password_hash = hash_password(data.password)
+    user.is_admin = user.is_admin or is_admin_email(email)
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -91,6 +102,7 @@ async def login(data: LoginRequest, request: Request, session: Session = Depends
         )
 
     auth_limiter.reset(key)
+    _grant_admin_if_configured(user, session)
     return _token_response(user)
 
 
@@ -110,6 +122,7 @@ async def dev_token(data: DevTokenRequest, session: Session = Depends(get_sessio
         session.commit()
         session.refresh(user)
 
+    _grant_admin_if_configured(user, session)
     return _token_response(user)
 
 

@@ -63,7 +63,7 @@ by unit tests.
 ```
 backend/
   app/
-    api/routes/     HTTP endpoints (auth, purchases, financing offers, comparisons)
+    api/routes/     HTTP endpoints (auth, admin, purchases, financing offers, comparisons)
     core/           settings, database session, JWT helpers
     models/         SQLModel tables
     schemas/        request/response models
@@ -98,13 +98,17 @@ docker compose up -d --build
 Migrations run automatically when the backend container starts.
 
 To get in, either use the demo buttons on the login screen (development only),
-or create an account: by default any `@familia.com` address can register and no
-registration code is needed. To use real addresses, put them in a `.env` file
-next to `docker-compose.yml`:
+or create an account: by default any `@familia.com` address can register, no
+registration code is needed and `admin@familia.com` is the administrator.
+
+To use it for real, create a `.env` file next to `docker-compose.yml` with your
+own address as administrator, restart with `docker compose up -d`, register with
+that address and add everyone else from the **Administración** page:
 
 ```env
-ALLOWED_EMAILS=mum@example.com,dad@example.com
+ADMIN_EMAIL=you@example.com
 REGISTRATION_CODE=something-only-the-family-knows
+ALLOWED_EMAILS=
 ```
 
 ## Tests and checks
@@ -173,7 +177,8 @@ environments:
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `JWT_SECRET` | Secret used to sign and verify JWTs. At least 32 characters in production |
-| `ALLOWED_EMAILS` | Comma-separated addresses or domains (`@example.org`) allowed to register |
+| `ADMIN_EMAIL` | Address of the administrator, who manages the allow-list from the app |
+| `ALLOWED_EMAILS` | Optional fixed allow-list on top of the administrator's: comma-separated addresses or domains (`@example.org`) |
 | `REGISTRATION_CODE` | Shared secret required to register. Mandatory in production |
 | `ENVIRONMENT` | `development`, `test` or `production` |
 | `CORS_ORIGINS` | Comma-separated list of allowed origins |
@@ -188,8 +193,13 @@ environments:
 
 The app is meant for a closed group, so there is no open sign-up:
 
-- **Allow-list.** Only addresses listed in `ALLOWED_EMAILS` can create an
-  account. An entry is either an exact address or a whole domain (`@example.org`).
+- **Allow-list.** Only authorised addresses can create an account. The
+  administrator manages the list from the **Administración** page inside the
+  app, adding either an exact address or a whole domain (`@example.org`).
+  Removing an entry blocks new registrations but leaves existing accounts alone.
+- **Administrator.** The account whose address is set in `ADMIN_EMAIL`. It can
+  always register, chooses its own password like everyone else, and gets the
+  admin page. No administrator password is stored in configuration.
 - **Registration code.** Registering also requires `REGISTRATION_CODE`, a shared
   secret handed out by whoever runs the app. Emails are not verified, so this is
   what stops a stranger from claiming an allowed address first. It is mandatory

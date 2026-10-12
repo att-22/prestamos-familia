@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Código que hay que conocer para registrarse. Sin verificación por correo,
     # es lo que impide que un extraño se adelante y ocupe un email autorizado.
     REGISTRATION_CODE: str = ""
+    # Email de quien administra la app: siempre puede registrarse y, al hacerlo,
+    # obtiene acceso a la vista de administración.
+    ADMIN_EMAIL: str = ""
 
     # App
     ENVIRONMENT: str = "development"
@@ -46,6 +49,11 @@ class Settings(BaseSettings):
     @classmethod
     def parse_allowed_emails(cls, v: Union[str, List[str]]) -> List[str]:
         return [entry.lower() for entry in _split_csv(v)]
+
+    @field_validator("ADMIN_EMAIL", mode="before")
+    @classmethod
+    def normalize_admin_email(cls, v: str) -> str:
+        return v.strip().lower()
 
     @model_validator(mode="after")
     def require_safe_production_settings(self) -> "Settings":

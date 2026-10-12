@@ -19,6 +19,7 @@ class UserUpdate(BaseModel):
 
 class UserRead(UserBase):
     id: UUID
+    is_admin: bool = False
     created_at: datetime
     updated_at: datetime
 

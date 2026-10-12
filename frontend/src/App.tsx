@@ -8,6 +8,7 @@ import { ComparisonPage } from '@/pages/ComparisonPage';
 import { ComparisonsList } from '@/pages/ComparisonsList';
 import { PublicComparison } from '@/pages/PublicComparison';
 import { GlossaryPage } from '@/pages/GlossaryPage';
+import { AdminPage } from '@/pages/AdminPage';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -37,6 +38,12 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
+// La API vuelve a comprobar el rol en cada petición; esto solo evita enseñar una página vacía
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return user?.is_admin ? <>{children}</> : <Navigate to="/dashboard" replace />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -59,6 +66,7 @@ function AppRoutes() {
         <Route path="/compare/:purchaseId/:offerId" element={<ComparisonPage />} />
         <Route path="/comparisons" element={<ComparisonsList />} />
         <Route path="/glossary" element={<GlossaryPage />} />
+        <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
       </Route>
 
       {/* Redirects */}
