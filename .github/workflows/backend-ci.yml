@@ -46,10 +46,10 @@ jobs:
       ENVIRONMENT: test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -75,7 +75,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Solo verifica que la imagen de producción se construye.
       # El despliegue lo hace Render al pasar los checks en main (ver render.yaml).
