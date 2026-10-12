@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List
+from typing import Dict, Literal, Optional, List
 from enum import Enum
 
 
@@ -13,10 +13,18 @@ class AlertType(str, Enum):
     ERROR = "error"
 
 
+class AlertParam(BaseModel):
+    value: str
+    kind: Literal["percent", "currency", "number"]
+
+
 class Alert(BaseModel):
     type: AlertType
+    # Texto con marcadores como "{tae}", que se sustituyen por params ya formateados
     message: str
     code: str
+    # Vacío en las comparativas guardadas antes de separar las cifras del texto
+    params: Dict[str, AlertParam] = {}
 
 
 class ComparisonBase(BaseModel):

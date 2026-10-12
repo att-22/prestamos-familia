@@ -35,3 +35,10 @@ describe('formatDate', () => {
     expect(formatDate('2026-03-05T12:00:00Z')).toBe('05/03/2026');
   });
 });
+
+describe('separador de miles', () => {
+  it('se pone también en los números de cuatro cifras', () => {
+    expect(plain(formatCurrency('5279.20'))).toBe('5.279,20 €');
+    expect(formatNumber(1200, 0)).toBe('1.200');
+  });
+});

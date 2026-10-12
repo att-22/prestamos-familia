@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { alertText } from '@/utils/alerts';
 import type { Alert, AlertType } from '@/types/api';
 
 interface AlertsPanelProps {
@@ -44,7 +45,7 @@ function AlertItem({ alert }: { alert: Alert }) {
   return (
     <li className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${container}`}>
       <Icon className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
-      <span>{alert.message}</span>
+      <span>{alertText(alert)}</span>
     </li>
   );
 }

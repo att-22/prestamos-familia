@@ -25,7 +25,7 @@ test('crear una compra que no es un vehículo', async ({ page, request }) => {
 
   await expect(page.getByRole('heading', { name: 'Lavadora y secadora' })).toBeVisible();
   await expect(page.getByText('Hogar y electrodomésticos')).toBeVisible();
-  await expect(page.getByText(/1200,00\s€/)).toBeVisible();
+  await expect(page.getByText(/1\.200,00\s€/)).toBeVisible();
   // La marca escrita mientras era "vehículo" no se guarda
   await expect(page.getByText('Bosch')).toBeHidden();
 });

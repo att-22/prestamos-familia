@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 from app.services.alerts import PERSONAL_ALERT_CODES, AlertType, generate_alerts
@@ -89,7 +90,31 @@ def test_balloon_payment_alert():
 
     big = alerts_for(residual_value=Decimal("10000"))["BALLOON_PAYMENT"]
     assert big.type == AlertType.WARNING
-    assert "10000" in big.message and "40.0%" in big.message
+    assert big.params == {
+        "residual": {"value": "10000", "kind": "currency"},
+        "share": {"value": "40.0", "kind": "percent"},
+    }
+
+
+def test_messages_carry_their_figures_as_params_not_as_text():
+    alerts = alerts_for(
+        tae=Decimal("9.5"), tin=Decimal("6.5"), opening_fee_percent=Decimal("1.5"),
+        early_repayment_fee_percent=Decimal("1"), mandatory_insurance_year=Decimal("300"), months=84,
+        monthly_income_percent=Decimal("32"), savings_after_down_payment=Decimal("1000"),
+        user_available_savings=Decimal("6000"), residual_value=Decimal("2500"),
+        effective_annual_rate=Decimal("11"), savings_vs_cash=Decimal("-4000"),
+    )
+
+    for alert in alerts.values():
+        placeholders = set(re.findall(r"\{(\w+)\}", alert.message))
+        # Cada marcador tiene su valor, y no queda ninguna cifra variable escrita en el texto
+        assert placeholders == set(alert.params), alert.code
+        assert not re.search(r"\d[\d.,]*\s?€", alert.message), alert.code
+    assert alerts["TERM_TOO_LONG"].params == {
+        "months": {"value": "84", "kind": "number"},
+        "years": {"value": "7.0", "kind": "number"},
+    }
+    assert alerts["FINANCING_MORE_EXPENSIVE"].params == {"amount": {"value": "4000", "kind": "currency"}}
 
 
 def test_personal_alert_codes_cover_every_alert_that_needs_user_data():

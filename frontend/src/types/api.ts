@@ -73,10 +73,18 @@ export interface FinancingOffer {
 
 export type AlertType = 'warning' | 'info' | 'success' | 'error';
 
+export interface AlertParam {
+  value: string;
+  kind: 'percent' | 'currency' | 'number';
+}
+
 export interface Alert {
   type: AlertType;
+  // Texto con marcadores como "{tae}"; las cifras llegan en params
   message: string;
   code: string;
+  // No existe en las comparativas guardadas antes de separar las cifras del texto
+  params?: Record<string, AlertParam>;
 }
 
 export interface ComparisonResult {

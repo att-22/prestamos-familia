@@ -30,7 +30,7 @@ describe('offerVerdict', () => {
     const verdict = offerVerdict({ priceCash: '25000.00', extraCost: '3779.20', months: 60, sourceName: 'Banco Ejemplo' });
 
     expect(plain(verdict)).toBe(
-      'Financiar con Banco Ejemplo te cuesta 3779,20 € más que pagar al contado, un 15,1% sobre el precio, a cambio de repartir el pago en 60 meses.',
+      'Financiar con Banco Ejemplo te cuesta 3.779,20 € más que pagar al contado, un 15,1% sobre el precio, a cambio de repartir el pago en 60 meses.',
     );
   });
 
@@ -60,8 +60,8 @@ describe('rankingVerdict', () => {
 
   it('señala la más barata y avisa de que la cuota más baja sale más cara', () => {
     expect(plain(rankingVerdict([short, long]))).toBe(
-      'La más barata es Banco Corto: te cuesta 1200,00 € más que pagar al contado y 2579,20 € menos que la más cara (Banco Largo). ' +
-      'Ojo: Banco Largo tiene la cuota más baja (391,32 € al mes), pero en total cuesta 2579,20 € más.',
+      'La más barata es Banco Corto: te cuesta 1.200,00 € más que pagar al contado y 2.579,20 € menos que la más cara (Banco Largo). ' +
+      'Ojo: Banco Largo tiene la cuota más baja (391,32 € al mes), pero en total cuesta 2.579,20 € más.',
     );
   });
 
@@ -74,6 +74,6 @@ describe('rankingVerdict', () => {
   it('avisa cuando todas cuestan lo mismo', () => {
     const verdict = rankingVerdict([{ ...long, is_cheapest: true }, { ...long, is_cheapest: true }]);
 
-    expect(plain(verdict)).toBe('Todas las ofertas cuestan lo mismo en total: cada una te cuesta 3779,20 € más que pagar al contado.');
+    expect(plain(verdict)).toBe('Todas las ofertas cuestan lo mismo en total: cada una te cuesta 3.779,20 € más que pagar al contado.');
   });
 });

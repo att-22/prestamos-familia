@@ -24,7 +24,7 @@ test('añadir una oferta desde el formulario', async ({ page, request }) => {
   await expect(page.getByRole('heading', { name: 'Banco Ejemplo' })).toBeVisible();
   // 5.000 entrada + 23.479,20 cuotas + 1.500 seguro + 300 comisión
   await expect(page.getByText(/30\.279,20\s€/)).toBeVisible();
-  await expect(page.getByText(/Cuesta de más 5279,20\s€/)).toBeVisible();
+  await expect(page.getByText(/Cuesta de más 5\.279,20\s€/)).toBeVisible();
 });
 
 test('analizar una oferta y aplicar la situación personal', async ({ page, request }) => {
@@ -37,16 +37,16 @@ test('analizar una oferta y aplicar la situación personal', async ({ page, requ
   await expect(page.getByText('Financiar te cuesta de más')).toBeVisible();
   await expect(page.getByText(/30\.279,20\s€/).first()).toBeVisible();
   await expect(page.getByText('7,37%')).toBeVisible(); // TAE efectiva, por encima de la declarada por la comisión
-  await expect(page.getByText(/Comisión de apertura del 1\.50%: es alta/)).toBeVisible();
+  await expect(page.getByText(/Comisión de apertura del 1,5%: es alta/)).toBeVisible();
   await expect(page.getByText('Cuota / Ingresos mensuales')).toBeHidden();
 
   await page.getByLabel('Ingresos netos al mes').fill('1100');
   await page.getByLabel('Ahorros disponibles').fill('6000');
   await page.getByRole('button', { name: 'Actualizar análisis' }).click();
 
-  await expect(page.getByText('35,57%')).toBeVisible(); // 391,32 / 1.100
+  await expect(page.getByText('35,57%', { exact: true })).toBeVisible(); // 391,32 / 1.100
   await expect(page.getByText(/Riesgo alto de sobreendeudamiento/)).toBeVisible();
-  await expect(page.getByText(/Tras la entrada te quedarían 1000\.00€/)).toBeVisible();
+  await expect(page.getByText(/Tras la entrada te quedarían 1\.000,00\s€/)).toBeVisible();
 });
 
 test('la cuota final cuenta en el coste total', async ({ page, request }) => {
@@ -62,7 +62,7 @@ test('la cuota final cuenta en el coste total', async ({ page, request }) => {
   await expect(page.getByText('Cuota final para que sea tuyo')).toBeVisible();
   // 5.000 entrada + 13.983,36 cuotas + 10.000 cuota final
   await expect(page.getByText(/28\.983,36\s€/).first()).toBeVisible();
-  await expect(page.getByText(/Al terminar las cuotas quedan 10000\.00€ por pagar/)).toBeVisible();
+  await expect(page.getByText(/Al terminar las cuotas quedan 10\.000,00\s€ por pagar \(40% del precio\)/)).toBeVisible();
 });
 
 test('guardar una comparativa y abrir su enlace sin sesión', async ({ page, request, browser }) => {
@@ -74,7 +74,7 @@ test('guardar una comparativa y abrir su enlace sin sesión', async ({ page, req
 
   await page.getByLabel('Ingresos netos al mes').fill('1100');
   await page.getByRole('button', { name: 'Actualizar análisis' }).click();
-  await expect(page.getByText('35,57%')).toBeVisible();
+  await expect(page.getByText('35,57%', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Guardar comparativa' }).click();
   const shareUrl = await page.getByLabel('Enlace para compartir').inputValue();
   expect(shareUrl).toMatch(/\/c\/[\w-]+$/);
@@ -128,7 +128,7 @@ test('con varias ofertas se comparan lado a lado y se señala la más barata', a
   await page.goto(`/purchases/${purchase.id}`);
 
   // Con una sola oferta no hay nada que comparar
-  await expect(page.getByText(/Cuesta de más 5279,20\s€/)).toBeVisible();
+  await expect(page.getByText(/Cuesta de más 5\.279,20\s€/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Comparativa de ofertas' })).toHaveCount(0);
 
   // Más entrada y menos plazo: cuota más alta, pero 26.200 € en total
@@ -150,5 +150,5 @@ test('con varias ofertas se comparan lado a lado y se señala la más barata', a
 
   // Desde la tabla se llega al análisis de cada oferta, que abre con su veredicto
   await rows.nth(0).getByRole('link', { name: 'Banco Corto' }).click();
-  await expect(page.getByTestId('verdict')).toContainText(/Financiar con Banco Corto te cuesta 1200,00\s€ más que pagar al contado/);
+  await expect(page.getByTestId('verdict')).toContainText(/Financiar con Banco Corto te cuesta 1\.200,00\s€ más que pagar al contado/);
 });
