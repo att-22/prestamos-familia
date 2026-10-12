@@ -34,6 +34,8 @@ is in Spanish because that is who it was built for.
 - **Plain-language alerts.** Around twenty rules flag things worth questioning
   before signing: a high APR, a gap between nominal rate and APR, opening or
   early-repayment fees, tied insurance, long terms, and a large final payment.
+  What counts as a high APR or a long term depends on what is being bought: five
+  years is normal for a car and far too long for a phone.
 - **Personal affordability.** Optionally enter monthly income and savings to see
   the debt-to-income ratio and what is left after the down payment.
 - **Shareable results.** Saved comparisons get a public link that shows the
@@ -49,7 +51,7 @@ is in Spanish because that is who it was built for.
 | Insurance | `yearly insurance × months / 12` |
 | Total financing cost | `down payment + instalments + balloon payment + insurance + fees` |
 | Extra cost vs. cash | `total financing cost − cash price` |
-| Effective APR | Monthly rate `r` that solves `financed − fees = Σ instalment/(1+r)ⁿ + balloon/(1+r)ᴺ`, annualised as `(1+r)¹² − 1` |
+| Effective APR | Monthly rate `r` that solves `financed − fees = Σ (instalment + insurance/12)/(1+r)ⁿ + balloon/(1+r)ᴺ`, annualised as `(1+r)¹² − 1` |
 
 The balloon payment (residual value) is counted as a cost because the comparison
 is about *owning* what you bought: it is what must be paid at the end to keep it. All
@@ -260,7 +262,8 @@ address without a password and returns 404 when `ENVIRONMENT=production`.
 
 ## Roadmap
 
-- Including mandatory insurance in the effective APR
+- Exporting a comparison to PDF
+- Deleting your own account from the app (the API already supports it)
 
 ---
 

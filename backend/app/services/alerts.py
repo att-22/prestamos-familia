@@ -33,6 +33,31 @@ def number(value: Decimal | int) -> Dict[str, str]:
     return {"value": str(value), "kind": "number"}
 
 
+@dataclass(frozen=True)
+class Thresholds:
+    """A partir de qué TAE y qué plazo avisar. Son referencias orientativas, no datos de mercado."""
+    purpose: str            # cómo se nombra en los mensajes
+    tae_moderate: Decimal   # por encima, conviene comparar
+    tae_high: Decimal       # por encima, es cara
+    term_long: int          # meses
+    term_too_long: int
+
+
+# Lo razonable depende de qué se financia: un coche a 5 años es normal y un móvil no;
+# un 9 % es caro para un coche y corriente en el crédito de una tienda.
+THRESHOLDS = {
+    "vehicle": Thresholds("financiar un vehículo", Decimal("5"), Decimal("8"), 60, 72),
+    "home": Thresholds("financiar muebles o electrodomésticos", Decimal("6"), Decimal("10"), 24, 36),
+    "renovation": Thresholds("financiar una reforma", Decimal("6"), Decimal("9"), 84, 96),
+    "electronics": Thresholds("financiar tecnología", Decimal("6"), Decimal("10"), 12, 24),
+    "other": Thresholds("financiar una compra", Decimal("6"), Decimal("9"), 60, 72),
+}
+
+
+def thresholds_for(category: str) -> Thresholds:
+    return THRESHOLDS.get(category, THRESHOLDS["other"])
+
+
 # Alertas calculadas con los ingresos o ahorros del usuario. No deben salir
 # en el enlace compartido: su texto permite deducir esos datos.
 PERSONAL_ALERT_CODES = frozenset({
@@ -63,30 +88,35 @@ def generate_alerts(
     savings_after_down_payment: Optional[Decimal] = None,
     user_available_savings: Optional[Decimal] = None,
     residual_value: Optional[Decimal] = None,
+    category: str = "other",
 ) -> List[Alert]:
     """Genera alertas y consejos basados en reglas de sentido común financiero"""
     alerts = []
+    limits = thresholds_for(category)
 
     # === ALERTAS DE COSTE (TAE, intereses) ===
 
-    if tae > Decimal("8"):
+    if tae > limits.tae_high:
         alerts.append(Alert(
             type=AlertType.WARNING,
-            message="La TAE del {tae} es alta. Pide oferta a tu banco y a otra entidad antes de aceptar esta.",
+            message=(
+                f"La TAE del {{tae}} es alta para {limits.purpose} (más del {{limit}}). "
+                "Pide oferta a tu banco y a otra entidad antes de aceptar esta."
+            ),
             code="TAE_HIGH",
-            params={"tae": percent(tae)},
+            params={"tae": percent(tae), "limit": percent(limits.tae_high)},
         ))
-    elif tae > Decimal("5"):
+    elif tae > limits.tae_moderate:
         alerts.append(Alert(
             type=AlertType.INFO,
-            message="La TAE del {tae} es moderada. Compara con tu banco antes de firmar.",
+            message=f"La TAE del {{tae}} es moderada para {limits.purpose}. Compara con tu banco antes de firmar.",
             code="TAE_MODERATE",
             params={"tae": percent(tae)},
         ))
     else:
         alerts.append(Alert(
             type=AlertType.SUCCESS,
-            message="Buena TAE ({tae}). Es una financiación competitiva.",
+            message=f"Buena TAE ({{tae}}) para {limits.purpose}. Es una financiación competitiva.",
             code="TAE_GOOD",
             params={"tae": percent(tae)},
         ))
@@ -231,17 +261,20 @@ def generate_alerts(
         "months": number(months),
         "years": number((Decimal(months) / Decimal("12")).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)),
     }
-    if months > 72:
+    if months > limits.term_too_long:
         alerts.append(Alert(
             type=AlertType.WARNING,
-            message="Plazo de {months} meses ({years} años). Muy largo: pagas muchos intereses y puedes acabar debiendo más de lo que vale lo que compraste.",
+            message=(
+                f"Plazo de {{months}} meses ({{years}} años). Muy largo para {limits.purpose}: pagas muchos intereses "
+                "y puedes acabar debiendo más de lo que vale lo que compraste."
+            ),
             code="TERM_TOO_LONG",
             params=term,
         ))
-    elif months > 60:
+    elif months > limits.term_long:
         alerts.append(Alert(
             type=AlertType.INFO,
-            message="Plazo de {months} meses ({years} años). Considera acortarlo para pagar menos intereses.",
+            message=f"Plazo de {{months}} meses ({{years}} años). Es largo para {limits.purpose}: considera acortarlo para pagar menos intereses.",
             code="TERM_LONG",
             params=term,
         ))

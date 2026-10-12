@@ -127,3 +127,31 @@ def test_personal_alert_codes_cover_every_alert_that_needs_user_data():
                 user_available_savings=Decimal("9000"),
             )
             assert set(with_user_data.keys()) - without_user_data <= PERSONAL_ALERT_CODES
+
+
+def test_the_same_tae_is_judged_by_what_is_being_bought():
+    # Un 9 % es caro para un coche y corriente en el crédito de una tienda
+    assert "TAE_HIGH" in alerts_for(tae=Decimal("9"), tin=Decimal("9"), category="vehicle")
+    assert "TAE_MODERATE" in alerts_for(tae=Decimal("9"), tin=Decimal("9"), category="electronics")
+    assert "TAE_MODERATE" in alerts_for(tae=Decimal("5.5"), tin=Decimal("5.5"), category="vehicle")
+    assert "TAE_GOOD" in alerts_for(tae=Decimal("5.5"), tin=Decimal("5.5"), category="renovation")
+
+    high = alerts_for(tae=Decimal("9"), tin=Decimal("9"), category="vehicle")["TAE_HIGH"]
+    assert "financiar un vehículo" in high.message
+    assert high.params["limit"] == {"value": "8", "kind": "percent"}
+
+
+def test_the_same_term_is_judged_by_what_is_being_bought():
+    # Tres años es poco para un coche y demasiado para un móvil
+    assert not {"TERM_LONG", "TERM_TOO_LONG"} & set(alerts_for(months=36, category="vehicle"))
+    assert "TERM_TOO_LONG" in alerts_for(months=36, category="electronics")
+    assert "TERM_LONG" in alerts_for(months=36, category="home")
+    # Una reforma admite plazos que en un coche ya serían excesivos
+    assert "TERM_TOO_LONG" in alerts_for(months=84, category="vehicle")
+    assert not {"TERM_LONG", "TERM_TOO_LONG"} & set(alerts_for(months=84, category="renovation"))
+
+
+def test_unknown_or_missing_category_uses_the_general_thresholds():
+    assert set(alerts_for(tae=Decimal("9.5"), tin=Decimal("9.5"), category="barco")) == set(
+        alerts_for(tae=Decimal("9.5"), tin=Decimal("9.5"))
+    )

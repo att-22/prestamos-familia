@@ -80,7 +80,8 @@ def calculate_financing_comparison(input: CalculationInput, user_monthly_income:
       que es con lo que se compara el pago al contado)
     - Intereses + comisiones = Coste total financiado - Precio contado
     - Ahorro contado = Precio contado - Coste total financiado (negativo = financiar es más caro)
-    - TAE efectiva = Calculada vía VAN (aproximación)
+    - TAE efectiva = tipo que iguala lo recibido (financiado - comisiones) con el valor actual
+      de las cuotas, el seguro obligatorio y la cuota final
     """
     
     # Importe financiado
@@ -120,6 +121,7 @@ def calculate_financing_comparison(input: CalculationInput, user_monthly_income:
             months=input.months,
             opening_fee=opening_fee_calculated,
             residual_value=residual_value,
+            monthly_insurance=input.mandatory_insurance_year / Decimal("12"),
         )
     else:
         effective_annual_rate = Decimal("0")
@@ -163,12 +165,17 @@ def calculate_effective_tae(
     months: int,
     opening_fee: Decimal = Decimal("0"),
     residual_value: Decimal = Decimal("0"),
+    monthly_insurance: Decimal = Decimal("0"),
 ) -> Decimal:
     """
-    Calcula la TAE efectiva (IRR) usando método numérico (Newton-Raphson simplificado).
+    Calcula la TAE efectiva (IRR) por búsqueda binaria.
     Flujo de caja: recibes financed_amount - opening_fee al mes 0, pagas monthly_payment mes 1..n
-    y, si la hay, la cuota final (residual_value) junto con la última cuota
+    y, si la hay, la cuota final (residual_value) junto con la última cuota.
+    El seguro obligatorio es un coste de la financiación como cualquier otro: se reparte
+    entre las cuotas, igual que al sumarlo al coste total.
     """
+    monthly_payment = monthly_payment + monthly_insurance
+
     # Valor inicial: TAE declarada como punto de partida
     # Buscamos r mensual tal que VAN = 0
     

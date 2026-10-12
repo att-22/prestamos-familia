@@ -121,3 +121,23 @@ def test_effective_tae_accounts_for_residual_value():
 
 def test_no_residual_value_is_reported_as_none():
     assert calculate_financing_comparison(make_input()).residual_value is None
+
+
+def test_mandatory_insurance_increases_effective_tae():
+    without_insurance = calculate_effective_tae(Decimal("20000"), Decimal("391.32"), 60)
+    with_insurance = calculate_effective_tae(Decimal("20000"), Decimal("391.32"), 60, monthly_insurance=Decimal("25"))
+
+    # 25 € más al mes equivalen a pagar una cuota de 416,32 €
+    assert with_insurance == calculate_effective_tae(Decimal("20000"), Decimal("416.32"), 60)
+    assert with_insurance > without_insurance + Decimal("2")
+
+
+def test_effective_tae_of_the_comparison_includes_the_insurance():
+    plain = calculate_financing_comparison(make_input())
+    insured = calculate_financing_comparison(make_input(mandatory_insurance_year=Decimal("300")))
+
+    assert insured.effective_annual_rate > plain.effective_annual_rate
+    # Un «0 % de interés» con seguro obligatorio no sale gratis
+    zero_interest = make_input(tin=Decimal("0"), tae=Decimal("0"), monthly_payment=Decimal("333.33"),
+                               mandatory_insurance_year=Decimal("240"))
+    assert calculate_financing_comparison(zero_interest).effective_annual_rate > Decimal("2")
