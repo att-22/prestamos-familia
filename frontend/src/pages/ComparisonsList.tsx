@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Calculator, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency, formatPercent, formatDate } from '@/utils/format';
@@ -10,9 +11,16 @@ import type { Comparison } from '@/types/api';
 export function ComparisonsList() {
   const { data: comparisons = [], isLoading } = useComparisons();
   const deleteMutation = useDeleteComparison();
+  const confirm = useConfirm();
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Borrar esta comparativa? El enlace compartido dejará de funcionar.')) {
+    const confirmed = await confirm({
+      title: '¿Borrar esta comparativa?',
+      message: 'El enlace compartido dejará de funcionar.',
+      confirmLabel: 'Borrar',
+      danger: true,
+    });
+    if (confirmed) {
       await deleteMutation.mutateAsync(id);
     }
   };

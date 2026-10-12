@@ -14,8 +14,8 @@ module.exports = {
   },
   overrides: [
     {
-      // Exporta el provider y su hook juntos a propósito
-      files: ['src/hooks/useAuth.tsx'],
+      // Exportan el provider y su hook juntos a propósito
+      files: ['src/hooks/useAuth.tsx', 'src/hooks/useConfirm.tsx'],
       rules: { 'react-refresh/only-export-components': 'off' },
     },
   ],

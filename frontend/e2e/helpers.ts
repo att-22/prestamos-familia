@@ -106,3 +106,8 @@ export async function saveComparison(request: APIRequestContext, session: Sessio
   expect(response.status()).toBe(201);
   return response.json();
 }
+
+/** Pulsa el botón de confirmar del diálogo de la aplicación (ya no se usa el confirm() nativo). */
+export async function confirmDialog(page: Page, label: string): Promise<void> {
+  await page.getByRole('alertdialog').getByRole('button', { name: label, exact: true }).click();
+}

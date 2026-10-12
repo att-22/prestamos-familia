@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, ShoppingBag, Calculator, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useConfirm } from '@/hooks/useConfirm';
+import { Modal } from '@/components/ui/Modal';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency } from '@/utils/format';
@@ -43,6 +45,7 @@ export function Dashboard() {
   const createPurchaseMutation = useCreatePurchase();
   const updatePurchaseMutation = useUpdatePurchase();
   const deletePurchaseMutation = useDeletePurchase();
+  const confirm = useConfirm();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
@@ -61,7 +64,13 @@ export function Dashboard() {
   };
 
   const handleDeletePurchase = async (id: string) => {
-    if (confirm('¿Seguro que quieres borrar esta compra con todas sus ofertas y comparativas?')) {
+    const confirmed = await confirm({
+      title: '¿Borrar esta compra?',
+      message: 'Se borrarán también todas sus ofertas y comparativas.',
+      confirmLabel: 'Borrar',
+      danger: true,
+    });
+    if (confirmed) {
       await deletePurchaseMutation.mutateAsync(id);
     }
   };
@@ -120,17 +129,15 @@ export function Dashboard() {
 
       {/* Create/Edit Modal */}
       {(showCreateModal || editingPurchase) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <PurchaseForm
-              initialData={editingPurchase ? toFormData(editingPurchase) : undefined}
-              onSubmit={handleSubmit}
-              onCancel={closeModal}
-              isLoading={createPurchaseMutation.isPending || updatePurchaseMutation.isPending}
-              submitLabel={editingPurchase ? 'Guardar cambios' : 'Crear compra'}
-            />
-          </div>
-        </div>
+        <Modal onClose={closeModal} aria-label={editingPurchase ? 'Editar compra' : 'Nueva compra'} className="max-w-2xl">
+          <PurchaseForm
+            initialData={editingPurchase ? toFormData(editingPurchase) : undefined}
+            onSubmit={handleSubmit}
+            onCancel={closeModal}
+            isLoading={createPurchaseMutation.isPending || updatePurchaseMutation.isPending}
+            submitLabel={editingPurchase ? 'Guardar cambios' : 'Crear compra'}
+          />
+        </Modal>
       )}
     </div>
   );
