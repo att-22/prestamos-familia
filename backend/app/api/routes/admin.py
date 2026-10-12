@@ -1,4 +1,3 @@
-from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,7 +8,12 @@ from app.core.config import get_settings
 from app.core.database import get_session
 from app.models.allowed_email import AllowedEmail
 from app.models.user import User
-from app.schemas.admin import AdminSettings, AdminUserRead, AllowedEmailCreate, AllowedEmailRead
+from app.schemas.admin import (
+    AdminSettings,
+    AdminUserRead,
+    AllowedEmailCreate,
+    AllowedEmailRead,
+)
 from app.services.access import is_registration_allowed
 
 # Todo el router exige ser administrador
@@ -30,7 +34,7 @@ def get_admin_settings():
     )
 
 
-@router.get("/allowed-emails", response_model=List[AllowedEmailRead])
+@router.get("/allowed-emails", response_model=list[AllowedEmailRead])
 def list_allowed_emails(session: Session = Depends(get_session)):
     registered = _registered_emails(session)
 
@@ -97,7 +101,7 @@ def _read_user(user: User) -> AdminUserRead:
     )
 
 
-@router.get("/users", response_model=List[AdminUserRead])
+@router.get("/users", response_model=list[AdminUserRead])
 def list_users(session: Session = Depends(get_session)):
     return [_read_user(user) for user in session.exec(select(User).order_by(col(User.email))).all()]
 

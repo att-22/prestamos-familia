@@ -1,10 +1,9 @@
 import re
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, TypeAdapter, field_validator
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr, Field, TypeAdapter, field_validator
 
 _DOMAIN = re.compile(r"^@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
 _EMAIL = TypeAdapter(EmailStr)
@@ -24,29 +23,29 @@ class AllowedEmailCreate(BaseModel):
         try:
             return _EMAIL.validate_python(value).lower()
         except ValueError:
-            raise ValueError("Escribe un email válido o un dominio como @ejemplo.org")
+            raise ValueError("Escribe un email válido o un dominio como @ejemplo.org") from None
 
 
 class AllowedEmailRead(BaseModel):
     # Las entradas que vienen de la configuración (ALLOWED_EMAILS, ADMIN_EMAIL) no tienen id ni se pueden borrar
-    id: Optional[UUID]
+    id: UUID | None
     entry: str
     source: Literal["admin", "config"]
     is_domain: bool
     # Solo tiene sentido para emails concretos: si esa persona ya creó su cuenta
     registered: bool
-    created_at: Optional[datetime]
+    created_at: datetime | None
 
 
 class AdminSettings(BaseModel):
-    registration_code: Optional[str]
-    admin_email: Optional[str]
+    registration_code: str | None
+    admin_email: str | None
 
 
 class AdminUserRead(BaseModel):
     id: UUID
     email: str
-    name: Optional[str]
+    name: str | None
     is_admin: bool
     # False tras restablecer la contraseña, hasta que la persona vuelve a crear su cuenta
     has_password: bool

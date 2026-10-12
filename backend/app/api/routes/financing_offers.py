@@ -1,13 +1,17 @@
-from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, select
 
+from app.api.deps import get_current_user_id
 from app.core.database import get_session
 from app.models.financing_offer import FinancingOffer
 from app.models.purchase import Purchase
-from app.schemas.financing_offer import FinancingOfferCreate, FinancingOfferRead, FinancingOfferUpdate
-from app.api.deps import get_current_user_id
+from app.schemas.financing_offer import (
+    FinancingOfferCreate,
+    FinancingOfferRead,
+    FinancingOfferUpdate,
+)
 
 router = APIRouter(prefix="/financing-offers", tags=["financing-offers"])
 
@@ -31,7 +35,7 @@ def create_financing_offer(
     return offer
 
 
-@router.get("", response_model=List[FinancingOfferRead])
+@router.get("", response_model=list[FinancingOfferRead])
 def list_financing_offers(
     purchase_id: UUID | None = Query(None),
     user_id: UUID = Depends(get_current_user_id),

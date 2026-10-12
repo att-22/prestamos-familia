@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from sqlmodel import Session, text
+
 from app.core.database import get_session
 
 router = APIRouter(tags=["health"])

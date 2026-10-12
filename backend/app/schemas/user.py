@@ -1,7 +1,7 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.core.security import MAX_PASSWORD_BYTES
 
@@ -10,11 +10,11 @@ MIN_PASSWORD_LENGTH = 10
 
 class UserBase(BaseModel):
     email: EmailStr
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = Field(None, max_length=100)
+    name: str | None = Field(None, max_length=100)
 
 
 class UserRead(UserBase):
@@ -34,7 +34,7 @@ class LoginRequest(BaseModel):
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=MIN_PASSWORD_LENGTH)
-    name: Optional[str] = Field(None, max_length=100)
+    name: str | None = Field(None, max_length=100)
     registration_code: str = ""
 
     @field_validator("password")

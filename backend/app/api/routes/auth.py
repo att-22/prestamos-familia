@@ -3,6 +3,7 @@ import secrets
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session, select
 
+from app.api.deps import get_current_user
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.rate_limit import AttemptLimiter
@@ -17,7 +18,6 @@ from app.schemas.user import (
     UserRead,
     UserUpdate,
 )
-from app.api.deps import get_current_user
 from app.services.access import is_admin_email, is_registration_allowed
 
 router = APIRouter(prefix="/auth", tags=["auth"])

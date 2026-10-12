@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
-from sqlalchemy import ForeignKey
-from sqlmodel import SQLModel, Field, Column, Relationship
+from typing import TYPE_CHECKING
+
 import sqlalchemy.dialects.postgresql as pg
+from sqlalchemy import ForeignKey
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.comparison import Comparison
@@ -28,11 +29,11 @@ class Purchase(SQLModel, table=True):
     )
     category: str = Field(default="other", sa_column=Column(pg.VARCHAR(20), nullable=False, default="other"))
     # Detalles opcionales, pensados para la categoría "vehicle"
-    brand: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
-    model: Optional[str] = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
-    year: Optional[int] = Field(default=None, sa_column=Column(pg.INTEGER, nullable=True))
+    brand: str | None = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
+    model: str | None = Field(default=None, sa_column=Column(pg.VARCHAR(100), nullable=True))
+    year: int | None = Field(default=None, sa_column=Column(pg.INTEGER, nullable=True))
     is_used: bool = Field(default=False, sa_column=Column(pg.BOOLEAN, nullable=False, default=False))
-    notes: Optional[str] = Field(default=None, sa_column=Column(pg.TEXT, nullable=True))
+    notes: str | None = Field(default=None, sa_column=Column(pg.TEXT, nullable=True))
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=False),

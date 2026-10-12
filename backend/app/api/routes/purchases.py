@@ -1,8 +1,9 @@
-from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, select
 
+from app.api.deps import get_current_user_id
 from app.core.database import get_session
 from app.models.financing_offer import FinancingOffer
 from app.models.purchase import Purchase
@@ -10,7 +11,6 @@ from app.schemas.comparison import OfferRanking, OfferSummary
 from app.schemas.purchase import PurchaseCreate, PurchaseRead, PurchaseUpdate
 from app.services.calculations import calculate_financing_comparison
 from app.services.offer_analysis import to_calculation_input
-from app.api.deps import get_current_user_id
 
 router = APIRouter(prefix="/purchases", tags=["purchases"])
 
@@ -28,7 +28,7 @@ def create_purchase(
     return purchase
 
 
-@router.get("", response_model=List[PurchaseRead])
+@router.get("", response_model=list[PurchaseRead])
 def list_purchases(
     user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),

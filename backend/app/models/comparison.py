@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
-from sqlalchemy import ForeignKey
-from sqlmodel import SQLModel, Field, Column, Relationship
+from typing import TYPE_CHECKING
+
 import sqlalchemy.dialects.postgresql as pg
+from sqlalchemy import ForeignKey
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.financing_offer import FinancingOffer
@@ -31,7 +32,7 @@ class Comparison(SQLModel, table=True):
     total_financing_cost: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Total pagado financiando (entrada + cuotas + cuota final + comisiones + seguros)")
     total_interest_fees: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Total intereses + comisiones + seguros")
     savings_vs_cash: Decimal = Field(sa_column=Column(pg.NUMERIC(12, 2), nullable=False), description="Precio contado - coste financiado (negativo = financiar es más caro)")
-    monthly_income_percent: Optional[Decimal] = Field(default=None, sa_column=Column(pg.NUMERIC(5, 2), nullable=True), description="% de ingresos que supone la cuota")
+    monthly_income_percent: Decimal | None = Field(default=None, sa_column=Column(pg.NUMERIC(5, 2), nullable=True), description="% de ingresos que supone la cuota")
 
     alerts_json: list[dict] = Field(
         default=[],
@@ -47,8 +48,8 @@ class Comparison(SQLModel, table=True):
     shared_slug: str = Field(sa_column=Column(pg.VARCHAR(50), unique=True, index=True, nullable=False))
     is_public: bool = Field(default=True, sa_column=Column(pg.BOOLEAN, nullable=False, default=True))
 
-    user_monthly_income: Optional[Decimal] = Field(default=None, sa_column=Column(pg.NUMERIC(12, 2), nullable=True))
-    user_available_savings: Optional[Decimal] = Field(default=None, sa_column=Column(pg.NUMERIC(12, 2), nullable=True))
+    user_monthly_income: Decimal | None = Field(default=None, sa_column=Column(pg.NUMERIC(12, 2), nullable=True))
+    user_available_savings: Decimal | None = Field(default=None, sa_column=Column(pg.NUMERIC(12, 2), nullable=True))
 
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
@@ -63,9 +64,9 @@ class Comparison(SQLModel, table=True):
     financing_offer: "FinancingOffer" = Relationship(back_populates="comparisons")
 
     @property
-    def purchase_name(self) -> Optional[str]:
+    def purchase_name(self) -> str | None:
         return self.snapshot.get("purchase_name")
 
     @property
-    def source_name(self) -> Optional[str]:
+    def source_name(self) -> str | None:
         return self.snapshot.get("source_name")

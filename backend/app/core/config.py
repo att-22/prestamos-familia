@@ -1,10 +1,10 @@
 from functools import lru_cache
-from typing import List, Union
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _split_csv(value: Union[str, List[str]]) -> List[str]:
+def _split_csv(value: str | list[str]) -> list[str]:
     if isinstance(value, str):
         return [item.strip() for item in value.split(",") if item.strip()]
     return value
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Auth
     JWT_SECRET: str
     # Quién puede crear una cuenta: emails exactos o dominios enteros ("@familia.com")
-    ALLOWED_EMAILS: Union[str, List[str]] = ""
+    ALLOWED_EMAILS: str | list[str] = ""
     # Código que hay que conocer para registrarse. Sin verificación por correo,
     # es lo que impide que un extraño se adelante y ocupe un email autorizado.
     REGISTRATION_CODE: str = ""
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     # App
     ENVIRONMENT: str = "development"
-    CORS_ORIGINS: Union[str, List[str]] = "http://localhost:5173"
+    CORS_ORIGINS: str | list[str] = "http://localhost:5173"
 
     # Security
     ALGORITHM: str = "HS256"
@@ -52,12 +52,12 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
         return _split_csv(v)
 
     @field_validator("ALLOWED_EMAILS", mode="before")
     @classmethod
-    def parse_allowed_emails(cls, v: Union[str, List[str]]) -> List[str]:
+    def parse_allowed_emails(cls, v: str | list[str]) -> list[str]:
         return [entry.lower() for entry in _split_csv(v)]
 
     @field_validator("ADMIN_EMAIL", mode="before")

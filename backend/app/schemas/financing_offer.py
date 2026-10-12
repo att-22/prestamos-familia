@@ -1,8 +1,8 @@
-from pydantic import BaseModel, ConfigDict, Field
-from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FinancingOfferBase(BaseModel):
@@ -16,9 +16,9 @@ class FinancingOfferBase(BaseModel):
     opening_fee_percent: Decimal = Field(default=Decimal("0"), ge=0, le=10)
     early_repayment_fee_percent: Decimal = Field(default=Decimal("0"), ge=0, le=10)
     mandatory_insurance_year: Decimal = Field(default=Decimal("0"), ge=0)
-    residual_value: Optional[Decimal] = Field(None, ge=0)
-    residual_value_percent: Optional[Decimal] = Field(None, ge=0, le=100)
-    notes: Optional[str] = None
+    residual_value: Decimal | None = Field(None, ge=0)
+    residual_value_percent: Decimal | None = Field(None, ge=0, le=100)
+    notes: str | None = None
 
 
 class FinancingOfferCreate(FinancingOfferBase):
@@ -26,19 +26,19 @@ class FinancingOfferCreate(FinancingOfferBase):
 
 
 class FinancingOfferUpdate(BaseModel):
-    source_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    down_payment: Optional[Decimal] = Field(None, ge=0)
-    tin: Optional[Decimal] = Field(None, ge=0, le=100)
-    tae: Optional[Decimal] = Field(None, ge=0, le=100)
-    months: Optional[int] = Field(None, ge=1, le=120)
-    monthly_payment: Optional[Decimal] = Field(None, ge=0)
-    opening_fee: Optional[Decimal] = Field(None, ge=0)
-    opening_fee_percent: Optional[Decimal] = Field(None, ge=0, le=10)
-    early_repayment_fee_percent: Optional[Decimal] = Field(None, ge=0, le=10)
-    mandatory_insurance_year: Optional[Decimal] = Field(None, ge=0)
-    residual_value: Optional[Decimal] = Field(None, ge=0)
-    residual_value_percent: Optional[Decimal] = Field(None, ge=0, le=100)
-    notes: Optional[str] = None
+    source_name: str | None = Field(None, min_length=1, max_length=200)
+    down_payment: Decimal | None = Field(None, ge=0)
+    tin: Decimal | None = Field(None, ge=0, le=100)
+    tae: Decimal | None = Field(None, ge=0, le=100)
+    months: int | None = Field(None, ge=1, le=120)
+    monthly_payment: Decimal | None = Field(None, ge=0)
+    opening_fee: Decimal | None = Field(None, ge=0)
+    opening_fee_percent: Decimal | None = Field(None, ge=0, le=10)
+    early_repayment_fee_percent: Decimal | None = Field(None, ge=0, le=10)
+    mandatory_insurance_year: Decimal | None = Field(None, ge=0)
+    residual_value: Decimal | None = Field(None, ge=0)
+    residual_value_percent: Decimal | None = Field(None, ge=0, le=100)
+    notes: str | None = None
 
 
 class FinancingOfferRead(FinancingOfferBase):

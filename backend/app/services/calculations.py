@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Optional
+from decimal import ROUND_HALF_UP, Decimal
 
 
 @dataclass
@@ -15,8 +14,8 @@ class CalculationInput:
     opening_fee_percent: Decimal = Decimal("0")
     early_repayment_fee_percent: Decimal = Decimal("0")
     mandatory_insurance_year: Decimal = Decimal("0")
-    residual_value: Optional[Decimal] = None
-    residual_value_percent: Optional[Decimal] = None
+    residual_value: Decimal | None = None
+    residual_value_percent: Decimal | None = None
 
 
 @dataclass
@@ -31,7 +30,7 @@ class CalculationResult:
     opening_fee: Decimal
     early_repayment_fee_percent: Decimal
     mandatory_insurance_year: Decimal
-    residual_value: Optional[Decimal]
+    residual_value: Decimal | None
 
     # Calculados
     financed_amount: Decimal
@@ -44,8 +43,8 @@ class CalculationResult:
     effective_annual_rate: Decimal
 
     # Contexto usuario (opcional)
-    monthly_income_percent: Optional[Decimal] = None
-    savings_after_down_payment: Optional[Decimal] = None
+    monthly_income_percent: Decimal | None = None
+    savings_after_down_payment: Decimal | None = None
 
 
 def round_eur(value: Decimal) -> Decimal:
@@ -55,8 +54,8 @@ def round_eur(value: Decimal) -> Decimal:
 
 def resolve_residual_value(
     price_cash: Decimal,
-    residual_value: Optional[Decimal],
-    residual_value_percent: Optional[Decimal],
+    residual_value: Decimal | None,
+    residual_value_percent: Decimal | None,
 ) -> Decimal:
     """Cuota final en euros. Si se indican importe y porcentaje, manda el importe."""
     if residual_value is not None:
@@ -66,7 +65,7 @@ def resolve_residual_value(
     return Decimal("0.00")
 
 
-def calculate_financing_comparison(input: CalculationInput, user_monthly_income: Optional[Decimal] = None, user_available_savings: Optional[Decimal] = None) -> CalculationResult:
+def calculate_financing_comparison(input: CalculationInput, user_monthly_income: Decimal | None = None, user_available_savings: Decimal | None = None) -> CalculationResult:
     """
     Calcula la comparación completa entre pagar al contado y financiar.
     

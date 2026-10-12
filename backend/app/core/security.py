@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from pydantic import BaseModel
+
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -27,7 +27,7 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("ascii")
 
 
-def verify_password(password: str, password_hash: Optional[str]) -> bool:
+def verify_password(password: str, password_hash: str | None) -> bool:
     encoded = password.encode("utf-8")
     if len(encoded) > MAX_PASSWORD_BYTES:
         return False
@@ -38,12 +38,12 @@ def verify_password(password: str, password_hash: Optional[str]) -> bool:
 
 
 def create_access_token(user_id: str, email: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = {"sub": user_id, "email": email, "exp": expire}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.ALGORITHM)
 
 
-def decode_token(token: str) -> Optional[TokenData]:
+def decode_token(token: str) -> TokenData | None:
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.ALGORITHM])
         user_id: str = payload.get("sub")
@@ -54,7 +54,7 @@ def decode_token(token: str) -> Optional[TokenData]:
         return TokenData(
             user_id=user_id,
             email=email,
-            exp=datetime.fromtimestamp(exp_timestamp, tz=timezone.utc),
+            exp=datetime.fromtimestamp(exp_timestamp, tz=UTC),
         )
     except JWTError:
         return None
