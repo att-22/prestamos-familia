@@ -24,6 +24,9 @@ settings = get_settings()
 
 # 5 fallos en 15 minutos por IP y email, tanto al entrar como al registrarse
 auth_limiter = AttemptLimiter(max_attempts=5, window_seconds=15 * 60)
+# Tope por email desde cualquier IP. Detrás de un proxy la IP sale de una cabecera que
+# el cliente puede falsear; sin esto bastaría cambiarla para seguir probando contraseñas.
+email_limiter = AttemptLimiter(max_attempts=20, window_seconds=15 * 60)
 
 
 def _limiter_key(request: Request, email: str) -> str:
@@ -31,12 +34,17 @@ def _limiter_key(request: Request, email: str) -> str:
     return f"{client}:{email}"
 
 
-def _check_not_blocked(key: str) -> None:
-    if auth_limiter.is_blocked(key):
+def _check_not_blocked(key: str, email: str) -> None:
+    if auth_limiter.is_blocked(key) or email_limiter.is_blocked(email):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Demasiados intentos. Espera unos minutos y vuelve a probar.",
         )
+
+
+def _record_failure(key: str, email: str) -> None:
+    auth_limiter.record_failure(key)
+    email_limiter.record_failure(email)
 
 
 def _grant_admin_if_configured(user: User, session: Session) -> None:
@@ -58,14 +66,14 @@ async def register(data: RegisterRequest, request: Request, session: Session = D
     """Crea la cuenta de un email autorizado. Hace falta el código de registro si está configurado."""
     email = data.email.lower()
     key = _limiter_key(request, email)
-    _check_not_blocked(key)
+    _check_not_blocked(key, email)
 
     code_ok = not settings.REGISTRATION_CODE or secrets.compare_digest(
         data.registration_code.encode("utf-8"), settings.REGISTRATION_CODE.encode("utf-8")
     )
     # Mismo error para email no autorizado y código incorrecto: no se revela cuál falla
     if not is_registration_allowed(session, email) or not code_ok:
-        auth_limiter.record_failure(key)
+        _record_failure(key, email)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Este email no está autorizado o el código de invitación no es correcto.",
@@ -91,11 +99,11 @@ async def register(data: RegisterRequest, request: Request, session: Session = D
 async def login(data: LoginRequest, request: Request, session: Session = Depends(get_session)):
     email = data.email.lower()
     key = _limiter_key(request, email)
-    _check_not_blocked(key)
+    _check_not_blocked(key, email)
 
     user = session.exec(select(User).where(User.email == email)).first()
     if not verify_password(data.password, user.password_hash if user else None) or user is None:
-        auth_limiter.record_failure(key)
+        _record_failure(key, email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o contraseña incorrectos.",

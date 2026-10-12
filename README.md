@@ -158,13 +158,40 @@ runs the end-to-end tests. All of them run on every pull request; on pushes to
 | Workflow | Job | What it does |
 |----------|-----|--------------|
 | `backend-ci.yml` | `test` | Starts PostgreSQL as a service container, then runs ruff, mypy, the migrations and pytest with coverage |
-| `backend-ci.yml` | `docker` | Builds the production image to make sure it still builds |
+| `backend-ci.yml` | `docker` | Builds the production image (multi-stage, runs as a non-root user) to make sure it still builds |
 | `frontend-ci.yml` | `test` | ESLint, type check, Vitest and a production build |
 | `frontend-ci.yml` | `deploy` | Deploys to Vercel — a preview for pull requests, production on `main` |
 | `e2e.yml` | `e2e` | Starts PostgreSQL, the API and the production build of the frontend, then runs the Playwright suite against them. The report and traces are uploaded when a test fails |
 
 The deploy job is skipped until the `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
 `VERCEL_PROJECT_ID` repository secrets are set.
+
+## Deployment
+
+Everything fits in free tiers:
+
+| Part | Where | How it gets there |
+|------|-------|-------------------|
+| Frontend | [Vercel](https://vercel.com) | The `deploy` job of `frontend-ci.yml` |
+| API | [Render](https://render.com), as a Docker web service | Render deploys `main` once its checks pass (`autoDeployTrigger: checksPass` in [`render.yaml`](render.yaml)) |
+| Database | [Neon](https://neon.tech) PostgreSQL | Migrations run when the API container starts |
+
+The database is not on Render because its free PostgreSQL is deleted after 30
+days. The free API instance sleeps after 15 minutes without traffic, so the
+first request after a pause takes about a minute.
+
+To set it up:
+
+1. **Neon** — create a project and copy its connection string.
+2. **Render** — *New → Blueprint*, pick this repository and fill in the values
+   it asks for: `DATABASE_URL` (from Neon), `ADMIN_EMAIL`, `REGISTRATION_CODE`
+   and `CORS_ORIGINS` (the Vercel URL, once known). `JWT_SECRET` is generated.
+3. **Vercel** — run `npx vercel link` inside `frontend/`, set `VITE_API_URL` to
+   the Render URL in the project's environment variables, and add the three
+   `VERCEL_*` secrets to this repository.
+
+`/healthz` answers 503 when the database is unreachable, which is what Render
+uses to decide whether a new deploy is healthy.
 
 ## Configuration
 
@@ -206,8 +233,9 @@ The app is meant for a closed group, so there is no open sign-up:
   in production.
 - **Passwords** are at least 10 characters and stored as bcrypt hashes.
 - **Brute force.** Five failed attempts for an address from the same IP block
-  further attempts for 15 minutes. The counter is kept in memory, which is
-  enough for a single backend instance.
+  further attempts for 15 minutes, and so do twenty for an address from any IP:
+  behind a proxy the client address comes from a header that can be forged. The
+  counters are kept in memory, which is enough for a single backend instance.
 - **Forgotten passwords** are reset by the administrator, as there is no email
   service:
 
@@ -220,7 +248,6 @@ address without a password and returns 404 when `ENVIRONMENT=production`.
 
 ## Roadmap
 
-- Deploy: the pipeline is ready, pending hosting for the API and its database
 - Side-by-side comparison of several offers for the same purchase
 - "What if" sliders to explore a larger down payment or a shorter term
 - Including mandatory insurance in the effective APR

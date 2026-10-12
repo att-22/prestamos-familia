@@ -78,6 +78,6 @@ jobs:
       - uses: actions/checkout@v4
 
       # Solo verifica que la imagen de producción se construye.
-      # El despliegue real (Railway/Render) se conecta al repo desde su panel.
+      # El despliegue lo hace Render al pasar los checks en main (ver render.yaml).
       - name: Build production image
         run: docker build -t prestamos-backend ./backend

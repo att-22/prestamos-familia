@@ -1,0 +1,31 @@
+# Render Blueprint: the API runs as a Docker web service.
+# The database lives in Neon (Render's free PostgreSQL expires after 30 days).
+services:
+  - type: web
+    name: prestamos-familia-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /healthz
+    # Deploy a commit on main only once its GitHub Actions checks have passed
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - backend/**
+        - render.yaml
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      # Asked for when the Blueprint is created; never stored in the repository
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: REGISTRATION_CODE
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
