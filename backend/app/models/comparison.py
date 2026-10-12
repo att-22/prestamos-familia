@@ -36,7 +36,7 @@ class Comparison(SQLModel, table=True):
     alerts_json: list[dict] = Field(
         default=[],
         sa_column=Column(pg.JSONB, nullable=False, default=[]),
-        description="Lista de alertas: [{type: 'warning'|'info'|'success', 'message': '...', 'code': '...'}]",
+        description="Lista de alertas: [{type: 'warning'|'info'|'success', 'message': '...', 'code': '...', 'params': {...}}]",
     )
 
     # Foto de la compra y la oferta con las que se calcularon los totales de arriba.

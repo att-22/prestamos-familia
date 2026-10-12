@@ -64,7 +64,7 @@ def _compute(
         residual_value=result.residual_value,
     )
 
-    alerts_json = [{"type": a.type.value, "message": a.message, "code": a.code} for a in alerts]
+    alerts_json = [{"type": a.type.value, "message": a.message, "code": a.code, "params": a.params} for a in alerts]
     return result, alerts_json
 
 
