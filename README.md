@@ -11,7 +11,7 @@ that matter — total paid, real APR, and how much more it costs than cash — a
 explains them in plain language for people with no financial background. The UI
 is in Spanish because that is who it was built for.
 
-![Analysis of a financing offer with a balloon payment](docs/screenshot.png)
+![Analysis of a financing offer with a balloon payment: verdict, totals and breakdown](docs/analysis.png)
 
 ## What it does
 
@@ -43,6 +43,20 @@ is in Spanish because that is who it was built for.
 - **PDF.** Any analysis, including a shared one, can be saved as a PDF: a print
   stylesheet leaves out navigation and controls.
 - **Glossary.** Searchable definitions of the terms a lender will use.
+
+## Screenshots
+
+Three offers for the same car, ranked by what you end up paying:
+
+![Offers for one purchase ranked by total cost](docs/offers.png)
+
+How each instalment of the balloon offer splits between interest and principal:
+
+![Amortisation chart and yearly table](docs/amortization.png)
+
+The same offer with a larger down payment and a longer term:
+
+![What-if simulator with the down payment and term changed](docs/simulator.png)
 
 ## How the numbers work
 
